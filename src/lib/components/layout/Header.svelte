@@ -4,7 +4,7 @@
 	const tenant = getTenantContext();
 </script>
 
-<header class="sticky top-0 z-20 border-b border-[var(--md-sys-color-outline-variant)]/20 bg-[var(--md-sys-color-surface)]/95 backdrop-blur-md">
+<header class="sticky top-0 z-20 border-b border-[var(--md-sys-color-outline-variant)]/15 bg-[var(--md-sys-color-surface)]/90 backdrop-blur-lg">
 	<div class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
 		<!-- Shop name -->
 		<div class="flex items-center gap-2">

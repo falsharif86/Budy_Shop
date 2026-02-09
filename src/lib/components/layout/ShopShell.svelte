@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Header from './Header.svelte';
 	import CartFab from '$lib/components/cart/CartFab.svelte';
 	import CartDrawer from '$lib/components/cart/CartDrawer.svelte';
 	import ProductDetails from '$lib/components/product/ProductDetails.svelte';
@@ -13,8 +12,6 @@
 </script>
 
 <div class="flex min-h-dvh flex-col">
-	<Header />
-
 	<main class="flex-1">
 		{@render children()}
 	</main>

@@ -1,48 +1,48 @@
 @import 'tailwindcss';
 
-/* M3 Design Tokens */
+/* M3 Dark Cannabis Theme - Electric Jade */
 :root {
-	/* Primary */
-	--md-sys-color-primary: #4a6741;
-	--md-sys-color-on-primary: #ffffff;
-	--md-sys-color-primary-container: #cbefbe;
-	--md-sys-color-on-primary-container: #072100;
+	/* Primary - Electric Jade */
+	--md-sys-color-primary: #00C896;
+	--md-sys-color-on-primary: #0A0E0D;
+	--md-sys-color-primary-container: #004D3A;
+	--md-sys-color-on-primary-container: #7DFFC8;
 
 	/* Secondary */
-	--md-sys-color-secondary: #54634d;
+	--md-sys-color-secondary: #8B5CF6;
 	--md-sys-color-on-secondary: #ffffff;
-	--md-sys-color-secondary-container: #d7e8cd;
-	--md-sys-color-on-secondary-container: #121f0e;
+	--md-sys-color-secondary-container: #2D1A6E;
+	--md-sys-color-on-secondary-container: #D4BBFF;
 
 	/* Tertiary */
-	--md-sys-color-tertiary: #386668;
+	--md-sys-color-tertiary: #FF6B35;
 	--md-sys-color-on-tertiary: #ffffff;
-	--md-sys-color-tertiary-container: #bcebee;
-	--md-sys-color-on-tertiary-container: #002021;
+	--md-sys-color-tertiary-container: #5C2600;
+	--md-sys-color-on-tertiary-container: #FFDBC8;
 
 	/* Error */
-	--md-sys-color-error: #ba1a1a;
+	--md-sys-color-error: #FF3B82;
 	--md-sys-color-on-error: #ffffff;
-	--md-sys-color-error-container: #ffdad6;
+	--md-sys-color-error-container: #5C0028;
 
-	/* Surface */
-	--md-sys-color-surface: #f8faf0;
-	--md-sys-color-on-surface: #1a1c18;
-	--md-sys-color-surface-variant: #dfe4d7;
-	--md-sys-color-on-surface-variant: #43483e;
-	--md-sys-color-surface-container: #ecefe4;
-	--md-sys-color-surface-container-low: #f2f5ea;
-	--md-sys-color-surface-container-high: #e6e9de;
-	--md-sys-color-surface-container-highest: #e1e4d9;
+	/* Surface - Greenish-gray palette (matches POS Flutter) */
+	--md-sys-color-surface: #121a17;
+	--md-sys-color-on-surface: #E8F5E8;
+	--md-sys-color-surface-variant: #313632;
+	--md-sys-color-on-surface-variant: #C3C8BE;
+	--md-sys-color-surface-container: #1d2622;
+	--md-sys-color-surface-container-low: #171f1c;
+	--md-sys-color-surface-container-high: #283029;
+	--md-sys-color-surface-container-highest: #333b34;
 
 	/* Outline */
-	--md-sys-color-outline: #73796d;
-	--md-sys-color-outline-variant: #c3c8bb;
+	--md-sys-color-outline: #8D928A;
+	--md-sys-color-outline-variant: #434841;
 
 	/* Inverse */
-	--md-sys-color-inverse-surface: #2f312c;
-	--md-sys-color-inverse-on-surface: #f0f2e7;
-	--md-sys-color-inverse-primary: #b0d3a3;
+	--md-sys-color-inverse-surface: #E8F5E8;
+	--md-sys-color-inverse-on-surface: #0A0E0D;
+	--md-sys-color-inverse-primary: #006B50;
 
 	/* Elevation */
 	--md-sys-elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
@@ -56,13 +56,13 @@
 	--md-sys-shape-corner-xl: 28px;
 
 	/* Typography */
-	--md-sys-typescale-body-medium: 400 0.875rem/1.25rem system-ui, -apple-system, sans-serif;
-	--md-sys-typescale-body-large: 400 1rem/1.5rem system-ui, -apple-system, sans-serif;
-	--md-sys-typescale-title-medium: 500 1rem/1.5rem system-ui, -apple-system, sans-serif;
-	--md-sys-typescale-title-large: 400 1.375rem/1.75rem system-ui, -apple-system, sans-serif;
-	--md-sys-typescale-headline-small: 400 1.5rem/2rem system-ui, -apple-system, sans-serif;
-	--md-sys-typescale-label-large: 500 0.875rem/1.25rem system-ui, -apple-system, sans-serif;
-	--md-sys-typescale-label-medium: 500 0.75rem/1rem system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-body-medium: 400 0.875rem/1.25rem 'Inter', system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-body-large: 400 1rem/1.5rem 'Inter', system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-title-medium: 500 1rem/1.5rem 'Inter', system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-title-large: 400 1.375rem/1.75rem 'Inter', system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-headline-small: 400 1.5rem/2rem 'Inter', system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-label-large: 500 0.875rem/1.25rem 'Inter', system-ui, -apple-system, sans-serif;
+	--md-sys-typescale-label-medium: 500 0.75rem/1rem 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* Base reset */
@@ -75,13 +75,13 @@
 }
 
 html {
-	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
 
 body {
-	background-color: var(--md-sys-color-surface);
+	background: radial-gradient(ellipse at top left, var(--md-sys-color-surface), var(--md-sys-color-surface-container-low));
 	color: var(--md-sys-color-on-surface);
 	min-height: 100dvh;
 }

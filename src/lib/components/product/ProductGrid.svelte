@@ -19,8 +19,8 @@
 	</div>
 {:else}
 	<div
-		class="grid gap-4 p-4"
-		style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));"
+		class="grid justify-items-center gap-3 px-4 pt-14"
+		style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));"
 	>
 		{#each products as product, i (product.id)}
 			<ProductCard {product} index={i} />
