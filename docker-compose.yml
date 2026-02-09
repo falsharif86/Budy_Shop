@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  budy-shop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: budy-shop:latest
+    container_name: budy-shop
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - MONGODB_URI=mongodb://host.docker.internal:27017
+      - VITE_API_BASE_URL=https://api.budy.app
+    networks:
+      - budy-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "io.portainer.managed=true"
+      - "io.portainer.application=budy-shop"
+      - "io.portainer.environment=production"
+
+networks:
+  budy-network:
+    external: true
+    name: budy-stack-network
