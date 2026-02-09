@@ -1,25 +1,24 @@
 import type { PageServerLoad } from './$types.js';
 import { createApiClient } from '$lib/api/client.js';
 import { fetchProducts } from '$lib/api/products.js';
-import { fetchCategories, fetchSubCategories } from '$lib/api/categories.js';
+import { fetchCategories } from '$lib/api/categories.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.tenant) {
-		return { products: [], categories: [], subCategories: [] };
+		return { products: [], categories: [] };
 	}
 
 	const api = createApiClient(locals.tenant.id);
 
 	try {
-		const [products, categories, subCategories] = await Promise.all([
-			fetchProducts(api, { limit: 200 }),
-			fetchCategories(api),
-			fetchSubCategories(api)
+		const [productResult, categories] = await Promise.all([
+			fetchProducts(api),
+			fetchCategories(api)
 		]);
 
-		return { products, categories, subCategories };
+		return { products: productResult.items, categories };
 	} catch (error) {
 		console.error('Failed to load shop data:', error);
-		return { products: [], categories: [], subCategories: [] };
+		return { products: [], categories: [] };
 	}
 };

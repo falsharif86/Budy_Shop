@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Product } from '$lib/types/product.js';
-	import { getProductName } from '$lib/utils/eav.js';
 	import { getProductImageUrl } from '$lib/utils/image-url.js';
 	import { formatPriceCompact } from '$lib/utils/currency.js';
 	import { isInStock, getEffectivePrice } from '$lib/types/product.js';
@@ -11,19 +10,14 @@
 	interface Props {
 		product: Product;
 		index?: number;
-		lang?: string;
 	}
 
-	let { product, index = 0, lang = 'en' }: Props = $props();
+	let { product, index = 0 }: Props = $props();
 
-	const name = $derived(getProductName(product, lang));
+	const name = $derived(product.name);
 	const imageUrl = $derived(getProductImageUrl(product));
 	const price = $derived(getEffectivePrice(product));
 	const inStock = $derived(isInStock(product));
-	const subCategoryName = $derived(
-		product.attributes.find((a) => a.attributeKey === 'subcategory_name' && a.languageCode === lang)
-			?.textValue ?? null
-	);
 
 	function handleClick() {
 		ui.openProductDrawer(product);
@@ -69,9 +63,9 @@
 
 		<!-- Content -->
 		<div class="flex flex-col gap-1 p-3 pt-2">
-			{#if subCategoryName}
+			{#if product.categoryName}
 				<span class="text-[11px] font-medium tracking-wide text-[var(--md-sys-color-primary)] uppercase">
-					{subCategoryName}
+					{product.categoryName}
 				</span>
 			{/if}
 

@@ -1,14 +1,12 @@
 <script lang="ts">
-	import type { Category, SubCategory } from '$lib/types/category.js';
-	import { getCategoryDisplayName, getSubCategoryDisplayName } from '$lib/types/category.js';
+	import type { Category } from '$lib/types/category.js';
 	import { productStore } from '$lib/stores/products.svelte.js';
 
 	interface Props {
 		categories: Category[];
-		lang?: string;
 	}
 
-	let { categories, lang = 'en' }: Props = $props();
+	let { categories }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-2 px-4 py-2">
@@ -41,28 +39,8 @@
 				{#if category.iconUrl}
 					<img src={category.iconUrl} alt="" class="mr-1 inline-block h-4 w-4" />
 				{/if}
-				{getCategoryDisplayName(category, lang)}
+				{category.displayName ?? category.name}
 			</button>
 		{/each}
 	</div>
-
-	<!-- Subcategory chips -->
-	{#if productStore.activeSubCategories.length > 0}
-		<div class="no-scrollbar flex gap-2 overflow-x-auto">
-			{#each productStore.activeSubCategories as sub (sub.id)}
-				<button
-					class="shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors"
-					class:bg-[var(--md-sys-color-secondary)]={productStore.selectedSubCategoryId === sub.id}
-					class:text-[var(--md-sys-color-on-secondary)]={productStore.selectedSubCategoryId === sub.id}
-					class:bg-[var(--md-sys-color-surface-container-high)]={productStore.selectedSubCategoryId !== sub.id}
-					class:text-[var(--md-sys-color-on-surface-variant)]={productStore.selectedSubCategoryId !== sub.id}
-					onclick={() => productStore.selectSubCategory(
-						productStore.selectedSubCategoryId === sub.id ? null : sub.id
-					)}
-				>
-					{getSubCategoryDisplayName(sub, lang)}
-				</button>
-			{/each}
-		</div>
-	{/if}
 </div>

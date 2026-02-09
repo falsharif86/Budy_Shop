@@ -19,7 +19,7 @@ export function createApiClient(tenantId: string) {
 		}
 
 		const headers = new Headers(fetchOptions.headers);
-		headers.set('__tenant', tenantId);
+		headers.set('X-Tenant-Id', tenantId);
 		headers.set('Accept', 'application/json');
 		if (fetchOptions.body && !headers.has('Content-Type')) {
 			headers.set('Content-Type', 'application/json');

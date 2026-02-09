@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { CartItem } from '$lib/types/cart.js';
 	import { getCartItemPrice, getCartItemName } from '$lib/types/cart.js';
-	import { getProductName } from '$lib/utils/eav.js';
 	import { getProductImageUrl } from '$lib/utils/image-url.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import ProductImage from '$lib/components/shared/ProductImage.svelte';
@@ -9,12 +8,11 @@
 
 	interface Props {
 		item: CartItem;
-		lang?: string;
 	}
 
-	let { item, lang = 'en' }: Props = $props();
+	let { item }: Props = $props();
 
-	const name = $derived(getCartItemName(item, (p) => getProductName(p, lang)));
+	const name = $derived(getCartItemName(item));
 	const imageUrl = $derived(getProductImageUrl(item.product));
 	const unitPrice = $derived(getCartItemPrice(item));
 	const totalPrice = $derived(unitPrice * item.quantity);

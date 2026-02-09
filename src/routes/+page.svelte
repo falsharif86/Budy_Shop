@@ -12,7 +12,7 @@
 	// Initialize store with SSR data
 	$effect(() => {
 		productStore.setProducts(data.products);
-		productStore.setCategories(data.categories, data.subCategories);
+		productStore.setCategories(data.categories);
 	});
 </script>
 

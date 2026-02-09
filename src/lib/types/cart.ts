@@ -11,9 +11,9 @@ export function getCartItemPrice(item: CartItem): number {
 	return item.product.price;
 }
 
-export function getCartItemName(item: CartItem, getName: (p: Product) => string): string {
-	const productName = getName(item.product);
-	if (item.variant && item.variant.name !== 'Standard') {
+export function getCartItemName(item: CartItem): string {
+	const productName = item.product.name;
+	if (item.variant && item.variant.name && item.variant.name !== 'Standard') {
 		return `${productName} - ${item.variant.name}`;
 	}
 	return productName;

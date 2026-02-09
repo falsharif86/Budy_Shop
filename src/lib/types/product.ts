@@ -1,34 +1,31 @@
 export interface Product {
 	id: string;
+	name: string;
 	sku: string;
 	price: number;
 	cost: number;
 	stockLevel: number;
 	mainImageUrl: string | null;
 	isByWeight: boolean;
-	isDeleted: boolean;
-	approvalStatus: number;
-	unit: number;
-	tenantId: string;
-	productCategoryId: string | null;
-	productSubCategoryId: string | null;
-	productClassificationId: string | null;
-	strainId: string | null;
-	weight: number | null;
-	unitsPerPack: number | null;
-	creationTime: string;
-	lastModificationTime: string | null;
+	categoryId: string | null;
+	categoryName: string | null;
+	variantCount: number;
+	hasVariants: boolean;
 	variants: ProductVariant[];
+}
+
+export interface ProductDetail extends Product {
+	description: string | null;
+	unit: number;
+	subCategoryId: string | null;
+	subCategoryName: string | null;
 	images: ProductImage[];
-	attributes: ProductAttribute[];
-	tags: ProductTag[];
 }
 
 export interface ProductVariant {
 	id: string;
-	productId: string;
+	name: string | null;
 	sku: string;
-	name: string;
 	price: number;
 	cost: number;
 	weight: number | null;
@@ -36,60 +33,13 @@ export interface ProductVariant {
 	stockLevel: number;
 	isDefault: boolean;
 	isActive: boolean;
-	isByWeight: boolean;
-	unit: number;
-	sortOrder: number;
-	attributes: VariantAttribute[];
 }
 
 export interface ProductImage {
 	id: string;
-	productId: string;
-	variantId: string | null;
-	fileName: string;
 	filePath: string;
-	mimeType: string;
-	fileSize: number;
-	sortOrder: number;
 	isMain: boolean;
-	imageType: number;
-	altText: string | null;
-	width: number | null;
-	height: number | null;
-	isBgRemoved: boolean;
-	isDeleted: boolean;
-}
-
-export interface ProductAttribute {
-	id: string;
-	productId: string;
-	attributeKey: string;
-	languageCode: string;
-	compositeKey: string;
-	textValue: string;
-	numberValue: number | null;
-	boolValue: boolean | null;
-	isDeleted: boolean;
-}
-
-export interface VariantAttribute {
-	id: string;
-	variantId: string;
-	attributeKey: string;
-	languageCode: string;
-	compositeKey: string;
-	textValue: string;
-	numberValue: number | null;
-	boolValue: boolean | null;
-	isDeleted: boolean;
-}
-
-export interface ProductTag {
-	id: string;
-	productId: string;
-	tag: string;
-	languageCode: string;
-	source: string;
+	sortOrder: number;
 }
 
 export function isInStock(product: Product): boolean {
@@ -97,10 +47,6 @@ export function isInStock(product: Product): boolean {
 		return product.variants.some((v) => v.isActive && v.stockLevel > 0);
 	}
 	return product.stockLevel > 0;
-}
-
-export function isApproved(product: Product): boolean {
-	return product.approvalStatus === 1;
 }
 
 export function getEffectivePrice(product: Product): number {

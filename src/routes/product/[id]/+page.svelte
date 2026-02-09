@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { getProductName, getProductDescription, getProductBrand } from '$lib/utils/eav.js';
 	import { getProductImageUrl, getAllProductImages } from '$lib/utils/image-url.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import { isInStock, getEffectivePrice, getEffectiveStock } from '$lib/types/product.js';
@@ -19,9 +18,8 @@
 		selectedVariant = product.variants.find((v) => v.isDefault && v.isActive) ?? null;
 	});
 
-	const name = $derived(getProductName(product));
-	const description = $derived(getProductDescription(product));
-	const brand = $derived(getProductBrand(product));
+	const name = $derived(product.name);
+	const description = $derived(product.description);
 	const images = $derived(getAllProductImages(product));
 	const price = $derived(selectedVariant?.price ?? getEffectivePrice(product));
 	const inStock = $derived(isInStock(product));
@@ -61,8 +59,8 @@
 
 		<!-- Details -->
 		<div class="flex flex-col gap-4">
-			{#if brand}
-				<span class="text-xs font-semibold tracking-wider text-[var(--md-sys-color-primary)] uppercase">{brand}</span>
+			{#if product.subCategoryName}
+				<span class="text-xs font-semibold tracking-wider text-[var(--md-sys-color-primary)] uppercase">{product.subCategoryName}</span>
 			{/if}
 
 			<h1 class="text-2xl font-bold text-[var(--md-sys-color-on-surface)]">{name}</h1>
@@ -108,16 +106,6 @@
 					>
 						Add to Cart - {formatPrice(price * quantity)}
 					</button>
-				</div>
-			{/if}
-
-			{#if product.tags.length > 0}
-				<div class="mt-2 flex flex-wrap gap-1.5">
-					{#each product.tags.slice(0, 8) as tag (tag.id)}
-						<span class="rounded-full bg-[var(--md-sys-color-surface-container-high)] px-2.5 py-0.5 text-xs text-[var(--md-sys-color-on-surface-variant)]">
-							{tag.tag}
-						</span>
-					{/each}
 				</div>
 			{/if}
 		</div>

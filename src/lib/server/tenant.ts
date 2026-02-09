@@ -1,4 +1,4 @@
-import { getHostDb } from './db.js';
+import { env } from '$env/dynamic/private';
 
 const RESERVED_SUBDOMAINS = new Set([
 	'api',
@@ -45,22 +45,26 @@ export function extractSubdomain(host: string): string | null {
 }
 
 /**
- * Look up tenant by normalized name in budy_host.Tenants collection.
+ * Look up tenant by name using the Budy tenant-lookup endpoint.
  */
 export async function resolveTenant(subdomain: string): Promise<TenantInfo | null> {
-	const db = await getHostDb();
-	const collection = db.collection('Tenants');
-	const tenant = await collection.findOne({
-		NormalizedName: subdomain.toUpperCase(),
-		IsDeleted: { $ne: true },
-		IsEnabled: true
-	});
+	const apiBase = env.VITE_API_BASE_URL ?? 'https://api.budy.app';
 
-	if (!tenant) return null;
+	try {
+		const res = await fetch(
+			`${apiBase}/api/auth/tenant-lookup/by-name/${encodeURIComponent(subdomain)}`
+		);
+		if (!res.ok) return null;
 
-	return {
-		id: tenant._id.toString(),
-		name: tenant.Name as string,
-		normalizedName: tenant.NormalizedName as string
-	};
+		const data = await res.json();
+		if (!data.success) return null;
+
+		return {
+			id: data.tenantId,
+			name: data.name,
+			normalizedName: subdomain.toUpperCase()
+		};
+	} catch {
+		return null;
+	}
 }

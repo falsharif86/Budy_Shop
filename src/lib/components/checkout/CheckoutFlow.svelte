@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { formatPrice } from '$lib/utils/currency.js';
-	import { getProductName } from '$lib/utils/eav.js';
 	import { getCartItemPrice, getCartItemName } from '$lib/types/cart.js';
 	import OrderSuccess from './OrderSuccess.svelte';
 
@@ -43,7 +42,7 @@
 			{#each cart.items as item (item.variant ? `${item.product.id}:${item.variant.id}` : item.product.id)}
 				<div class="flex items-center justify-between py-2">
 					<div>
-						<span class="text-sm font-medium">{getCartItemName(item, (p) => getProductName(p))}</span>
+						<span class="text-sm font-medium">{getCartItemName(item)}</span>
 						<span class="ml-2 text-xs text-[var(--md-sys-color-outline)]">x{item.quantity}</span>
 					</div>
 					<span class="text-sm font-semibold">{formatPrice(getCartItemPrice(item) * item.quantity)}</span>

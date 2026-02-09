@@ -6,11 +6,10 @@
 	import { formatPrice } from '$lib/utils/currency.js';
 
 	interface Props {
-		lang?: string;
 		oncheckout?: () => void;
 	}
 
-	let { lang = 'en', oncheckout }: Props = $props();
+	let { oncheckout }: Props = $props();
 
 	function handleCheckout() {
 		ui.closeCartDrawer();
@@ -64,7 +63,7 @@
 			{:else}
 				<div class="divide-y divide-[var(--md-sys-color-outline-variant)]/20">
 					{#each cart.items as item (item.variant ? `${item.product.id}:${item.variant.id}` : item.product.id)}
-						<CartItemComponent {item} {lang} />
+						<CartItemComponent {item} />
 					{/each}
 				</div>
 			{/if}

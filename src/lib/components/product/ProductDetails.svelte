@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Product, ProductVariant } from '$lib/types/product.js';
-	import { getProductName, getProductDescription, getProductBrand } from '$lib/utils/eav.js';
-	import { getProductImageUrl, getAllProductImages } from '$lib/utils/image-url.js';
+	import { getProductImageUrl } from '$lib/utils/image-url.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import { isInStock, getEffectivePrice, getEffectiveStock } from '$lib/types/product.js';
 	import ProductImage from '$lib/components/shared/ProductImage.svelte';
@@ -12,10 +11,9 @@
 
 	interface Props {
 		product: Product;
-		lang?: string;
 	}
 
-	let { product, lang = 'en' }: Props = $props();
+	let { product }: Props = $props();
 
 	let selectedVariant = $state<ProductVariant | null>(null);
 	let quantity = $state(1);
@@ -24,10 +22,8 @@
 		selectedVariant = product.variants.find((v) => v.isDefault && v.isActive) ?? null;
 	});
 
-	const name = $derived(getProductName(product, lang));
-	const description = $derived(getProductDescription(product, lang));
-	const brand = $derived(getProductBrand(product, lang));
-	const images = $derived(getAllProductImages(product));
+	const name = $derived(product.name);
+	const imageUrl = $derived(getProductImageUrl(product));
 	const price = $derived(selectedVariant?.price ?? getEffectivePrice(product));
 	const inStock = $derived(isInStock(product));
 	const stock = $derived(selectedVariant?.stockLevel ?? getEffectiveStock(product));
@@ -57,7 +53,7 @@
 	<div class="flex h-full flex-col overflow-y-auto">
 		<!-- Image header -->
 		<div class="relative h-72 shrink-0 bg-[var(--md-sys-color-surface-container)]">
-			<ProductImage src={images[0]} alt={name} class="h-full w-full" />
+			<ProductImage src={imageUrl} alt={name} class="h-full w-full" />
 
 			<!-- Close button -->
 			<button
@@ -69,31 +65,11 @@
 					<path d="M6 18L18 6M6 6l12 12" />
 				</svg>
 			</button>
-
-			<!-- Image indicators -->
-			{#if images.length > 1}
-				<div class="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-					{#each images as _, i}
-						<div
-							class="h-1.5 rounded-full transition-all"
-							class:w-4={i === 0}
-							class:bg-[var(--md-sys-color-primary)]={i === 0}
-							class:w-1.5={i !== 0}
-							class:bg-[var(--md-sys-color-outline)]={i !== 0}
-						></div>
-					{/each}
-				</div>
-			{/if}
 		</div>
 
 		<!-- Content -->
 		<div class="flex flex-1 flex-col gap-4 p-5">
-			<!-- Brand & Name -->
-			{#if brand}
-				<span class="text-xs font-semibold tracking-wider text-[var(--md-sys-color-primary)] uppercase">
-					{brand}
-				</span>
-			{/if}
+			<!-- Name -->
 			<h2 class="text-xl font-semibold leading-tight text-[var(--md-sys-color-on-surface)]">
 				{name}
 			</h2>
@@ -120,27 +96,6 @@
 				selected={selectedVariant}
 				onselect={handleSelectVariant}
 			/>
-
-			<!-- Description -->
-			{#if description}
-				<div class="flex flex-col gap-1">
-					<h3 class="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">Description</h3>
-					<p class="text-sm leading-relaxed text-[var(--md-sys-color-on-surface)]">
-						{description}
-					</p>
-				</div>
-			{/if}
-
-			<!-- Tags -->
-			{#if product.tags.length > 0}
-				<div class="flex flex-wrap gap-1.5">
-					{#each product.tags.filter((t) => t.languageCode === lang || t.languageCode === 'en').slice(0, 6) as tag (tag.id)}
-						<span class="rounded-full bg-[var(--md-sys-color-surface-container-high)] px-2.5 py-0.5 text-xs text-[var(--md-sys-color-on-surface-variant)]">
-							{tag.tag}
-						</span>
-					{/each}
-				</div>
-			{/if}
 
 			<!-- Spacer -->
 			<div class="flex-1"></div>

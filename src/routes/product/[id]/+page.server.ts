@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types.js';
 import { createApiClient } from '$lib/api/client.js';
-import { fetchProductBySku } from '$lib/api/products.js';
+import { fetchProductDetails } from '$lib/api/products.js';
 import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	}
 
 	const api = createApiClient(locals.tenant.id);
-	const product = await fetchProductBySku(api, params.sku);
+	const product = await fetchProductDetails(api, params.id);
 
 	if (!product) {
 		error(404, 'Product not found');

@@ -6,7 +6,10 @@ const config = {
 		adapter: adapter({
 			out: 'build',
 			precompress: true
-		})
+		}),
+		version: {
+			name: process.env.PUBLIC_BUILD_VERSION || '0.1.0-dev'
+		}
 	}
 };
 

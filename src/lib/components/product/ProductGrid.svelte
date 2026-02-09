@@ -4,10 +4,9 @@
 
 	interface Props {
 		products: Product[];
-		lang?: string;
 	}
 
-	let { products, lang = 'en' }: Props = $props();
+	let { products }: Props = $props();
 </script>
 
 {#if products.length === 0}
@@ -24,7 +23,7 @@
 		style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));"
 	>
 		{#each products as product, i (product.id)}
-			<ProductCard {product} index={i} {lang} />
+			<ProductCard {product} index={i} />
 		{/each}
 	</div>
 {/if}
