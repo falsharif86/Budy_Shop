@@ -10,11 +10,25 @@
 </script>
 
 {#if count > 0}
-	<span
-		class="inline-flex items-center justify-center rounded-full bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] border-[2.5px] border-[var(--md-sys-color-surface)]"
-		class:animate-[pulse-badge_300ms_ease-out]={pulse}
-		style="min-width: 20px; height: 20px; font-size: 11px; font-weight: 600; padding: 0 5px; line-height: 1;"
-	>
+	<span class="badge" class:animate-[pulse-badge_300ms_ease-out]={pulse}>
 		{display}
 	</span>
 {/if}
+
+<style>
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 20px;
+		height: 20px;
+		padding: 0 5px;
+		border-radius: 9999px;
+		background: var(--md-sys-color-error);
+		color: var(--md-sys-color-on-error);
+		border: 2.5px solid var(--md-sys-color-surface);
+		font-size: 11px;
+		font-weight: 600;
+		line-height: 1;
+	}
+</style>

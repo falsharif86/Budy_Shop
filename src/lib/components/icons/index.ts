@@ -1,0 +1,9 @@
+export { default as IconClose } from './IconClose.svelte';
+export { default as IconCart } from './IconCart.svelte';
+export { default as IconMenu } from './IconMenu.svelte';
+export { default as IconSearch } from './IconSearch.svelte';
+export { default as IconChevronRight } from './IconChevronRight.svelte';
+export { default as IconChevronLeft } from './IconChevronLeft.svelte';
+export { default as IconPlus } from './IconPlus.svelte';
+export { default as IconMinus } from './IconMinus.svelte';
+export { default as IconTrash } from './IconTrash.svelte';

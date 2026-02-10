@@ -2,6 +2,7 @@
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import Badge from '$lib/components/shared/Badge.svelte';
+	import { IconCart } from '$lib/components/icons/index.js';
 
 	let prevCount = $state(0);
 	let pulsing = $state(false);
@@ -20,28 +21,60 @@
 </script>
 
 <button
-	class="fixed bottom-6 right-6 z-30 flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-all duration-200 active:scale-90"
-	class:bg-[var(--md-sys-color-primary)]={hasItems}
-	class:bg-[var(--md-sys-color-surface-container-highest)]={!hasItems}
+	class="cart-fab"
+	class:has-items={hasItems}
 	onclick={() => ui.toggleCartDrawer()}
 	aria-label="Open cart ({cart.totalItems} items)"
 >
-	<svg
-		class="h-6 w-6 transition-colors"
-		class:text-[var(--md-sys-color-on-primary)]={hasItems}
-		class:text-[var(--md-sys-color-on-surface)]={!hasItems}
-		fill="none"
-		viewBox="0 0 24 24"
-		stroke="currentColor"
-		stroke-width="2"
-	>
-		<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-	</svg>
+	<IconCart class="cart-fab__icon" />
 
 	<!-- Badge -->
 	{#if cart.totalItems > 0}
-		<div class="absolute -right-1 -top-1">
+		<div class="cart-fab__badge">
 			<Badge count={cart.totalItems} pulse={pulsing} />
 		</div>
 	{/if}
 </button>
+
+<style>
+	.cart-fab {
+		position: fixed;
+		bottom: 24px;
+		right: 24px;
+		z-index: 30;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 64px;
+		border-radius: 9999px;
+		background: var(--md-sys-color-surface-container-highest);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		transition: all 0.2s ease;
+	}
+
+	.cart-fab:active {
+		transform: scale(0.9);
+	}
+
+	.cart-fab.has-items {
+		background: var(--md-sys-color-primary);
+	}
+
+	:global(.cart-fab__icon) {
+		width: 24px;
+		height: 24px;
+		color: var(--md-sys-color-on-surface);
+		transition: color 0.2s ease;
+	}
+
+	.cart-fab.has-items :global(.cart-fab__icon) {
+		color: var(--md-sys-color-on-primary);
+	}
+
+	.cart-fab__badge {
+		position: absolute;
+		top: -4px;
+		right: -4px;
+	}
+</style>

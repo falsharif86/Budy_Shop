@@ -4,6 +4,7 @@
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import { formatPrice } from '$lib/utils/currency.js';
+	import { IconCart, IconClose, IconTrash } from '$lib/components/icons/index.js';
 
 	interface Props {
 		oncheckout?: () => void;
@@ -23,50 +24,38 @@
 </script>
 
 <Drawer open={ui.cartDrawerOpen} onclose={() => ui.closeCartDrawer()} zIndex={40}>
-	<div class="flex h-full flex-col">
+	<div class="cart-drawer">
 		<!-- Header -->
-		<div class="flex items-center justify-between border-b border-[var(--md-sys-color-outline-variant)]/30 px-5 py-4">
-			<div class="flex items-center gap-2">
-				<svg class="h-5 w-5 text-[var(--md-sys-color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-					<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-				</svg>
-				<h2 class="text-lg font-semibold text-[var(--md-sys-color-on-surface)]">
-					Cart ({cart.totalItems})
-				</h2>
+		<div class="cart-header">
+			<div class="cart-header__title">
+				<IconCart class="cart-header__icon" />
+				<h2 class="cart-header__text">Cart ({cart.totalItems})</h2>
 			</div>
 			<button
-				class="flex h-10 w-10 items-center justify-center rounded-full hover:bg-[var(--md-sys-color-surface-container)]"
+				class="cart-header__close-btn"
 				onclick={() => ui.closeCartDrawer()}
 				aria-label="Close cart"
 			>
-				<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-					<path d="M6 18L18 6M6 6l12 12" />
-				</svg>
+				<IconClose class="cart-header__close-icon" />
 			</button>
 		</div>
 
 		<!-- Items -->
-		<div class="flex-1 overflow-y-auto px-3 pt-2">
+		<div class="cart-items">
 			{#if cart.isEmpty}
-				<div class="flex flex-col items-center justify-center py-16 text-center">
-					<svg class="mb-4 h-20 w-20 text-[var(--md-sys-color-outline-variant)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-						<path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-					</svg>
-					<p class="text-base font-medium text-[var(--md-sys-color-on-surface-variant)]">
-						Your cart is empty
-					</p>
-					<p class="mt-1 text-sm text-[var(--md-sys-color-outline)]">
-						Add some products to get started
-					</p>
+				<div class="cart-empty">
+					<IconCart class="cart-empty__icon" strokeWidth={1} />
+					<p class="cart-empty__title">Your cart is empty</p>
+					<p class="cart-empty__subtitle">Add some products to get started</p>
 					<button
-						class="mt-6 rounded-full bg-[var(--md-sys-color-primary)] px-6 py-2.5 text-sm font-medium text-[var(--md-sys-color-on-primary)]"
+						class="cart-empty__btn"
 						onclick={() => ui.closeCartDrawer()}
 					>
 						Continue Shopping
 					</button>
 				</div>
 			{:else}
-				<div class="flex flex-col gap-2">
+				<div class="cart-items__list">
 					{#each cart.items as item (item.variant ? `${item.product.id}:${item.variant.id}` : item.product.id)}
 						<CartItemComponent {item} />
 					{/each}
@@ -76,47 +65,39 @@
 
 		<!-- Footer with totals card + dual action buttons -->
 		{#if !cart.isEmpty}
-			<div class="bg-[var(--md-sys-color-surface)] pt-3 pb-6">
+			<div class="cart-footer">
 				<!-- Totals card -->
-				<div class="mx-4 rounded-xl bg-[var(--md-sys-color-surface-container)]/90 p-4">
-					<!-- Subtotal -->
-					<div class="flex items-center justify-between">
-						<span class="text-sm text-[var(--md-sys-color-on-surface-variant)]">Subtotal</span>
-						<span class="text-sm font-medium text-[var(--md-sys-color-on-surface)]">{formatPrice(subtotal)}</span>
+				<div class="cart-totals">
+					<div class="cart-totals__row">
+						<span class="cart-totals__label">Subtotal</span>
+						<span class="cart-totals__value">{formatPrice(subtotal)}</span>
 					</div>
-					<!-- Tax -->
-					<div class="mt-1.5 flex items-center justify-between">
-						<span class="text-sm text-[var(--md-sys-color-on-surface-variant)]">Tax (0%)</span>
-						<span class="text-sm font-medium text-[var(--md-sys-color-on-surface)]">{formatPrice(taxAmount)}</span>
+					<div class="cart-totals__row">
+						<span class="cart-totals__label">Tax (0%)</span>
+						<span class="cart-totals__value">{formatPrice(taxAmount)}</span>
 					</div>
-					<!-- Divider -->
-					<div class="my-3 border-t border-[var(--md-sys-color-outline-variant)]/30"></div>
-					<!-- Total -->
-					<div class="flex items-center justify-between">
-						<span class="text-base font-bold text-[var(--md-sys-color-on-surface)]">Total</span>
-						<span class="text-xl font-bold text-[var(--md-sys-color-primary)]">{formatPrice(total)}</span>
+					<div class="cart-totals__divider"></div>
+					<div class="cart-totals__row">
+						<span class="cart-totals__total-label">Total</span>
+						<span class="cart-totals__total-value">{formatPrice(total)}</span>
 					</div>
 				</div>
 
 				<!-- Dual action buttons -->
-				<div class="mt-3 flex gap-3 px-4">
-					<!-- Clear button -->
+				<div class="cart-actions">
 					<button
-						class="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--md-sys-color-secondary)] text-base font-medium text-[var(--md-sys-color-on-secondary)] transition-transform active:scale-[0.98]"
+						class="cart-action-btn cart-action-btn--clear"
 						onclick={() => cart.clear()}
 					>
-						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-							<path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-						</svg>
+						<IconTrash class="cart-action-btn__icon" />
 						Clear
 					</button>
 
-					<!-- Checkout button -->
 					<button
-						class="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--md-sys-color-primary)] text-base font-medium text-[var(--md-sys-color-on-primary)] shadow-lg shadow-[var(--md-sys-color-primary)]/25 transition-transform active:scale-[0.98]"
+						class="cart-action-btn cart-action-btn--checkout"
 						onclick={handleCheckout}
 					>
-						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<svg class="cart-action-btn__icon-inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 							<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
 						</svg>
 						Checkout
@@ -126,3 +107,207 @@
 		{/if}
 	</div>
 </Drawer>
+
+<style>
+	.cart-drawer {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	/* --- Header --- */
+	.cart-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 16px 20px;
+		border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 30%, transparent);
+	}
+
+	.cart-header__title {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	:global(.cart-header__icon) {
+		width: 20px;
+		height: 20px;
+		color: var(--md-sys-color-primary);
+	}
+
+	.cart-header__text {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--md-sys-color-on-surface);
+	}
+
+	.cart-header__close-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border-radius: 9999px;
+		transition: background-color 0.15s ease;
+	}
+
+	.cart-header__close-btn:hover {
+		background: var(--md-sys-color-surface-container);
+	}
+
+	:global(.cart-header__close-icon) {
+		width: 20px;
+		height: 20px;
+	}
+
+	/* --- Items --- */
+	.cart-items {
+		flex: 1;
+		overflow-y: auto;
+		padding: 8px 12px 0;
+	}
+
+	.cart-items__list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	/* --- Empty state --- */
+	.cart-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 64px 0;
+		text-align: center;
+	}
+
+	:global(.cart-empty__icon) {
+		width: 80px;
+		height: 80px;
+		color: var(--md-sys-color-outline-variant);
+		margin-bottom: 16px;
+	}
+
+	.cart-empty__title {
+		font-size: 1rem;
+		font-weight: 500;
+		color: var(--md-sys-color-on-surface-variant);
+	}
+
+	.cart-empty__subtitle {
+		margin-top: 4px;
+		font-size: 0.875rem;
+		color: var(--md-sys-color-outline);
+	}
+
+	.cart-empty__btn {
+		margin-top: 24px;
+		padding: 10px 24px;
+		border-radius: 9999px;
+		background: var(--md-sys-color-primary);
+		color: var(--md-sys-color-on-primary);
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	/* --- Footer --- */
+	.cart-footer {
+		background: var(--md-sys-color-surface);
+		padding-top: 12px;
+		padding-bottom: 24px;
+	}
+
+	/* --- Totals --- */
+	.cart-totals {
+		margin: 0 16px;
+		padding: 16px;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--md-sys-color-surface-container) 90%, transparent);
+	}
+
+	.cart-totals__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.cart-totals__row + .cart-totals__row {
+		margin-top: 6px;
+	}
+
+	.cart-totals__label {
+		font-size: 0.875rem;
+		color: var(--md-sys-color-on-surface-variant);
+	}
+
+	.cart-totals__value {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--md-sys-color-on-surface);
+	}
+
+	.cart-totals__divider {
+		margin: 12px 0;
+		border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 30%, transparent);
+	}
+
+	.cart-totals__total-label {
+		font-size: 1rem;
+		font-weight: 700;
+		color: var(--md-sys-color-on-surface);
+	}
+
+	.cart-totals__total-value {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--md-sys-color-primary);
+	}
+
+	/* --- Action buttons --- */
+	.cart-actions {
+		display: flex;
+		gap: 12px;
+		padding: 12px 16px 0;
+	}
+
+	.cart-action-btn {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		height: 56px;
+		border-radius: 12px;
+		font-size: 1rem;
+		font-weight: 500;
+		transition: transform 0.1s ease;
+	}
+
+	.cart-action-btn:active {
+		transform: scale(0.98);
+	}
+
+	.cart-action-btn--clear {
+		background: var(--md-sys-color-secondary);
+		color: var(--md-sys-color-on-secondary);
+	}
+
+	.cart-action-btn--checkout {
+		background: var(--md-sys-color-primary);
+		color: var(--md-sys-color-on-primary);
+		box-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-primary) 25%, transparent);
+	}
+
+	:global(.cart-action-btn__icon) {
+		width: 20px;
+		height: 20px;
+	}
+
+	.cart-action-btn__icon-inline {
+		width: 20px;
+		height: 20px;
+	}
+</style>

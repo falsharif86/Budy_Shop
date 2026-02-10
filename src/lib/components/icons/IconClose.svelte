@@ -1,0 +1,11 @@
+<script lang="ts">
+	interface Props {
+		class?: string;
+		strokeWidth?: number;
+	}
+	let { class: className = '', strokeWidth = 2 }: Props = $props();
+</script>
+
+<svg class={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width={strokeWidth}>
+	<path d="M6 18L18 6M6 6l12 12" />
+</svg>

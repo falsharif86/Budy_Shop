@@ -60,7 +60,7 @@
 {#if open}
 	<!-- Backdrop -->
 	<button
-		class="fixed inset-0 bg-black/40"
+		class="drawer-backdrop"
 		style="z-index: {zIndex}"
 		transition:fade={{ duration: 200 }}
 		onclick={handleBackdropClick}
@@ -69,12 +69,10 @@
 
 	<!-- Drawer panel -->
 	<div
-		class="fixed inset-y-0 flex flex-col bg-[var(--md-sys-color-surface)] shadow-2xl"
-		class:right-0={side === 'right'}
-		class:left-0={side === 'left'}
-		class:rounded-r-3xl={side === 'left'}
-		class:rounded-l-3xl={side === 'right'}
-		style="z-index: {zIndex + 1}; width: min(calc(100vw - 56px), 320px); transform: translateX({swipeOffset}px);"
+		class="drawer-panel"
+		class:drawer-panel--right={side === 'right'}
+		class:drawer-panel--left={side === 'left'}
+		style="z-index: {zIndex + 1}; transform: translateX({swipeOffset}px);"
 		transition:fly={{
 			x: side === 'right' ? 320 : -320,
 			duration: 300,
@@ -90,3 +88,34 @@
 		{@render children()}
 	</div>
 {/if}
+
+<style>
+	.drawer-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.4);
+	}
+
+	.drawer-panel {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		display: flex;
+		flex-direction: column;
+		width: min(calc(100vw - 56px), 320px);
+		background: var(--md-sys-color-surface);
+		box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	}
+
+	.drawer-panel--right {
+		right: 0;
+		border-top-left-radius: 24px;
+		border-bottom-left-radius: 24px;
+	}
+
+	.drawer-panel--left {
+		left: 0;
+		border-top-right-radius: 24px;
+		border-bottom-right-radius: 24px;
+	}
+</style>

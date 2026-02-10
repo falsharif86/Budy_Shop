@@ -4,6 +4,7 @@
 	import { getProductImageUrl } from '$lib/utils/image-url.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import ProductImage from '$lib/components/shared/ProductImage.svelte';
+	import { IconPlus, IconMinus } from '$lib/components/icons/index.js';
 	import { cart } from '$lib/stores/cart.svelte.js';
 
 	interface Props {
@@ -27,57 +28,170 @@
 	}
 </script>
 
-<div class="rounded-lg bg-[var(--md-sys-color-surface-container)] p-3">
+<div class="cart-item">
 	<!-- Top row: image + name/unit price + total price -->
-	<div class="flex items-start gap-3">
+	<div class="cart-item__top">
 		<!-- Image -->
-		<div class="h-10 w-10 shrink-0 overflow-hidden rounded-md shadow-md">
+		<div class="cart-item__image">
 			<ProductImage src={imageUrl} alt={name} class="h-full w-full" />
 		</div>
 
 		<!-- Name + unit price -->
-		<div class="min-w-0 flex-1">
-			<h4 class="line-clamp-2 text-[15px] font-medium leading-tight text-[var(--md-sys-color-on-surface)]">
-				{name}
-			</h4>
-			<p class="mt-0.5 text-xs text-[var(--md-sys-color-on-surface-variant)]">
-				{formatPrice(unitPrice)}/unit
-			</p>
+		<div class="cart-item__info">
+			<h4 class="cart-item__name">{name}</h4>
+			<p class="cart-item__unit-price">{formatPrice(unitPrice)}/unit</p>
 		</div>
 
 		<!-- Total price -->
-		<span class="shrink-0 text-base font-bold text-[var(--md-sys-color-on-surface)]">
-			{formatPrice(totalPrice)}
-		</span>
+		<span class="cart-item__total">{formatPrice(totalPrice)}</span>
 	</div>
 
 	<!-- Bottom row: full-width quantity bar -->
-	<div class="mt-2.5 flex items-center gap-1 rounded-lg bg-[var(--md-sys-color-surface-container-highest)]/50 p-1">
+	<div class="cart-item__qty-bar">
 		<!-- Minus button -->
 		<button
-			class="flex h-8 w-10 items-center justify-center rounded-md bg-[var(--md-sys-color-secondary)]/10 transition-colors hover:bg-[var(--md-sys-color-secondary)]/20 active:scale-95"
+			class="cart-item__qty-btn cart-item__qty-btn--minus"
 			onclick={decrement}
 			aria-label="Decrease quantity"
 		>
-			<svg class="h-4 w-4 text-[var(--md-sys-color-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-				<path d="M5 12h14" />
-			</svg>
+			<IconMinus class="cart-item__qty-icon" />
 		</button>
 
 		<!-- Quantity display -->
-		<div class="flex flex-1 items-center justify-center rounded-md border border-[var(--md-sys-color-primary)]/30 bg-[var(--md-sys-color-primary-container)]/30 py-1">
-			<span class="text-sm font-bold text-[var(--md-sys-color-on-surface)]">{item.quantity}</span>
+		<div class="cart-item__qty-display">
+			<span class="cart-item__qty-value">{item.quantity}</span>
 		</div>
 
 		<!-- Plus button -->
 		<button
-			class="flex h-8 w-10 items-center justify-center rounded-md bg-[var(--md-sys-color-primary)]/10 transition-colors hover:bg-[var(--md-sys-color-primary)]/20 active:scale-95"
+			class="cart-item__qty-btn cart-item__qty-btn--plus"
 			onclick={increment}
 			aria-label="Increase quantity"
 		>
-			<svg class="h-4 w-4 text-[var(--md-sys-color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-				<path d="M12 5v14m-7-7h14" />
-			</svg>
+			<IconPlus class="cart-item__qty-icon" />
 		</button>
 	</div>
 </div>
+
+<style>
+	.cart-item {
+		padding: 12px;
+		border-radius: 8px;
+		background: var(--md-sys-color-surface-container);
+	}
+
+	.cart-item__top {
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+	}
+
+	.cart-item__image {
+		width: 40px;
+		height: 40px;
+		flex-shrink: 0;
+		overflow: hidden;
+		border-radius: 6px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	}
+
+	.cart-item__info {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.cart-item__name {
+		font-size: 15px;
+		font-weight: 500;
+		line-height: 1.3;
+		color: var(--md-sys-color-on-surface);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.cart-item__unit-price {
+		margin-top: 2px;
+		font-size: 12px;
+		color: var(--md-sys-color-on-surface-variant);
+	}
+
+	.cart-item__total {
+		flex-shrink: 0;
+		font-size: 16px;
+		font-weight: 700;
+		color: var(--md-sys-color-on-surface);
+	}
+
+	.cart-item__qty-bar {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-top: 10px;
+		padding: 4px;
+		border-radius: 8px;
+		background: color-mix(in srgb, var(--md-sys-color-surface-container-highest) 50%, transparent);
+	}
+
+	.cart-item__qty-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 32px;
+		border-radius: 6px;
+		transition: background-color 0.15s ease;
+	}
+
+	.cart-item__qty-btn:active {
+		transform: scale(0.95);
+	}
+
+	.cart-item__qty-btn--minus {
+		background: color-mix(in srgb, var(--md-sys-color-secondary) 10%, transparent);
+	}
+
+	.cart-item__qty-btn--minus:hover {
+		background: color-mix(in srgb, var(--md-sys-color-secondary) 20%, transparent);
+	}
+
+	.cart-item__qty-btn--plus {
+		background: color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent);
+	}
+
+	.cart-item__qty-btn--plus:hover {
+		background: color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
+	}
+
+	:global(.cart-item__qty-icon) {
+		width: 16px;
+		height: 16px;
+	}
+
+	.cart-item__qty-btn--minus :global(.cart-item__qty-icon) {
+		color: var(--md-sys-color-secondary);
+	}
+
+	.cart-item__qty-btn--plus :global(.cart-item__qty-icon) {
+		color: var(--md-sys-color-primary);
+	}
+
+	.cart-item__qty-display {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4px 0;
+		border-radius: 6px;
+		border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
+		background: color-mix(in srgb, var(--md-sys-color-primary-container) 30%, transparent);
+	}
+
+	.cart-item__qty-value {
+		font-size: 14px;
+		font-weight: 700;
+		color: var(--md-sys-color-on-surface);
+	}
+</style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { productStore } from '$lib/stores/products.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
@@ -8,6 +9,8 @@
 	let inputValue = $state('');
 	let debounceTimer: ReturnType<typeof setTimeout>;
 	let inputEl: HTMLInputElement | undefined = $state();
+
+	onDestroy(() => clearTimeout(debounceTimer));
 
 	const expanded = $derived(ui.searchExpanded);
 
