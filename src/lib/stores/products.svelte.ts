@@ -6,6 +6,7 @@ function createProductStore() {
 	let allProducts = $state<Product[]>([]);
 	let categories = $state<Category[]>([]);
 	let selectedCategoryId = $state<string | null>(null);
+	let selectedSubCategoryId = $state<string | null>(null);
 	let searchQuery = $state('');
 
 	const visibleProducts = $derived.by(() => {
@@ -14,6 +15,11 @@ function createProductStore() {
 		// Category filter
 		if (selectedCategoryId) {
 			filtered = filtered.filter((p) => p.categoryId === selectedCategoryId);
+		}
+
+		// SubCategory filter
+		if (selectedSubCategoryId) {
+			filtered = filtered.filter((p) => p.subCategoryId === selectedSubCategoryId);
 		}
 
 		// Search filter
@@ -45,6 +51,11 @@ function createProductStore() {
 
 	function selectCategory(id: string | null) {
 		selectedCategoryId = id;
+		selectedSubCategoryId = null;
+	}
+
+	function selectSubCategory(id: string | null) {
+		selectedSubCategoryId = id;
 	}
 
 	function setSearch(q: string) {
@@ -64,12 +75,16 @@ function createProductStore() {
 		get selectedCategoryId() {
 			return selectedCategoryId;
 		},
+		get selectedSubCategoryId() {
+			return selectedSubCategoryId;
+		},
 		get searchQuery() {
 			return searchQuery;
 		},
 		setProducts,
 		setCategories,
 		selectCategory,
+		selectSubCategory,
 		setSearch
 	};
 }

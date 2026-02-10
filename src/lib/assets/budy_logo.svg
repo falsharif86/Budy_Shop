@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024.0 1024.0" width="1024" height="1024">
+  <defs>
+    <linearGradient id="leafGrad0" x1="441.52" y1="840.20" x2="194.84" y2="487.90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2D8B5E"/>
+      <stop offset="100%" stop-color="#7EEDC4"/>
+    </linearGradient>
+    <linearGradient id="leafGrad1" x1="582.48" y1="840.20" x2="829.16" y2="487.90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2D8B5E"/>
+      <stop offset="100%" stop-color="#7EEDC4"/>
+    </linearGradient>
+    <linearGradient id="leafGrad2" x1="512.00" y1="788.48" x2="512.00" y2="266.24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2D8B5E"/>
+      <stop offset="100%" stop-color="#7EEDC4"/>
+    </linearGradient>
+  </defs>
+  <!-- left leaf -->
+  <path d="M 432.46,846.55 C 266.86,804.99 203.91,586.55 194.84,487.90 L 432.46,846.55 Z" fill="url(#leafGrad0)"/>
+  <path d="M 450.58,833.86 C 468.17,664.03 284.43,530.17 194.84,487.90 L 450.58,833.86 Z" fill="url(#leafGrad0)"/>
+  <!-- right leaf -->
+  <path d="M 573.42,833.86 C 555.83,664.03 739.57,530.17 829.16,487.90 L 573.42,833.86 Z" fill="url(#leafGrad1)"/>
+  <path d="M 591.54,846.55 C 757.14,804.99 820.09,586.55 829.16,487.90 L 591.54,846.55 Z" fill="url(#leafGrad1)"/>
+  <!-- center leaf -->
+  <path d="M 497.62,788.48 C 352.26,631.81 448.10,370.69 512.00,266.24 L 497.62,788.48 Z" fill="url(#leafGrad2)"/>
+  <path d="M 526.38,788.48 C 671.74,631.81 575.90,370.69 512.00,266.24 L 526.38,788.48 Z" fill="url(#leafGrad2)"/>
+</svg>

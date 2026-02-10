@@ -9,6 +9,7 @@ export interface Product {
 	isByWeight: boolean;
 	categoryId: string | null;
 	categoryName: string | null;
+	subCategoryId: string | null;
 	variantCount: number;
 	hasVariants: boolean;
 	variants: ProductVariant[];

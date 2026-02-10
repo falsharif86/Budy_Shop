@@ -2,6 +2,7 @@
 	import { getTenantContext } from '$lib/stores/tenant.js';
 	import { productStore } from '$lib/stores/products.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
+	import budyLogo from '$lib/assets/budy_logo.svg';
 
 	const tenant = getTenantContext();
 
@@ -63,11 +64,7 @@
 		<!-- Tenant branding (stays in DOM, animates out) -->
 		<div class="branding-wrap" class:collapsed={expanded}>
 			<div class="flex items-center gap-2">
-				<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--md-sys-color-primary)]">
-					<span class="text-xs font-bold text-[var(--md-sys-color-on-primary)]">
-						{tenant?.name?.charAt(0)?.toUpperCase() ?? 'B'}
-					</span>
-				</div>
+				<img src={budyLogo} alt="Budy" class="h-7 w-7 shrink-0" />
 				<h1 class="truncate text-lg font-semibold text-[var(--md-sys-color-on-surface)]">
 					{tenant?.name ?? 'Shop'}
 				</h1>

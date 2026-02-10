@@ -14,6 +14,7 @@ function mapProduct(dto: PosProductDto): Product {
 		isByWeight: dto.isByWeight,
 		categoryId: dto.categoryId,
 		categoryName: dto.categoryName,
+		subCategoryId: dto.subCategoryId ?? null,
 		variantCount: dto.variantCount,
 		hasVariants: dto.hasVariants,
 		variants: (dto.variants ?? []).map((v) => ({

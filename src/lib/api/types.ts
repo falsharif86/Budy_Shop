@@ -16,6 +16,7 @@ export interface PosProductDto {
 	isByWeight: boolean;
 	categoryId: string | null;
 	categoryName: string | null;
+	subCategoryId: string | null;
 	variantCount: number;
 	hasVariants: boolean;
 	variants: PosProductVariantDto[];
@@ -70,6 +71,17 @@ export interface PosCategoryDto {
 	displayName: string | null;
 	iconUrl: string | null;
 	colorHex: string | null;
+	sortOrder: number;
+	productCount: number;
+	subCategories: PosSubCategoryDto[];
+}
+
+/** SubCategory DTO */
+export interface PosSubCategoryDto {
+	id: string;
+	name: string;
+	displayName: string | null;
+	iconUrl: string | null;
 	sortOrder: number;
 	productCount: number;
 }

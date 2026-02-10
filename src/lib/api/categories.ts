@@ -1,6 +1,17 @@
 import type { ApiClient } from './client.js';
-import type { PosCategoryDto } from './types.js';
-import type { Category } from '$lib/types/category.js';
+import type { PosCategoryDto, PosSubCategoryDto } from './types.js';
+import type { Category, SubCategory } from '$lib/types/category.js';
+
+function mapSubCategory(dto: PosSubCategoryDto): SubCategory {
+	return {
+		id: dto.id,
+		name: dto.name,
+		displayName: dto.displayName,
+		iconUrl: dto.iconUrl,
+		sortOrder: dto.sortOrder,
+		productCount: dto.productCount
+	};
+}
 
 function mapCategory(dto: PosCategoryDto): Category {
 	return {
@@ -10,7 +21,10 @@ function mapCategory(dto: PosCategoryDto): Category {
 		iconUrl: dto.iconUrl,
 		colorHex: dto.colorHex,
 		sortOrder: dto.sortOrder,
-		productCount: dto.productCount
+		productCount: dto.productCount,
+		subCategories: (dto.subCategories ?? [])
+			.map(mapSubCategory)
+			.sort((a, b) => a.sortOrder - b.sortOrder)
 	};
 }
 
