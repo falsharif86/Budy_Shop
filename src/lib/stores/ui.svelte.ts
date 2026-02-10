@@ -1,5 +1,8 @@
 import type { Product } from '$lib/types/product.js';
 
+export type CheckoutStep = 'cart' | 'checkout' | 'processing' | 'success';
+export type DeliveryOption = 'pickup' | 'delivery';
+
 function createUiStore() {
 	let cartDrawerOpen = $state(false);
 	let productDrawerOpen = $state(false);
@@ -8,6 +11,8 @@ function createUiStore() {
 	let searchFocused = $state(false);
 	let navDrawerOpen = $state(false);
 	let searchExpanded = $state(false);
+	let checkoutStep = $state<CheckoutStep>('cart');
+	let selectedDeliveryOption = $state<DeliveryOption | null>(null);
 
 	function openCartDrawer() {
 		cartDrawerOpen = true;
@@ -15,6 +20,13 @@ function createUiStore() {
 
 	function closeCartDrawer() {
 		cartDrawerOpen = false;
+		// Delay resetting checkout state to allow exit animation
+		setTimeout(() => {
+			if (!cartDrawerOpen) {
+				checkoutStep = 'cart';
+				selectedDeliveryOption = null;
+			}
+		}, 350);
 	}
 
 	function toggleCartDrawer() {
@@ -58,6 +70,32 @@ function createUiStore() {
 		searchExpanded = false;
 	}
 
+	function startCheckout() {
+		checkoutStep = 'checkout';
+	}
+
+	function backToCart() {
+		checkoutStep = 'cart';
+		selectedDeliveryOption = null;
+	}
+
+	function setDeliveryOption(option: DeliveryOption) {
+		selectedDeliveryOption = option;
+	}
+
+	function startProcessing() {
+		checkoutStep = 'processing';
+	}
+
+	function showSuccess() {
+		checkoutStep = 'success';
+	}
+
+	function resetCheckout() {
+		checkoutStep = 'cart';
+		selectedDeliveryOption = null;
+	}
+
 	return {
 		get cartDrawerOpen() {
 			return cartDrawerOpen;
@@ -83,6 +121,12 @@ function createUiStore() {
 		get searchExpanded() {
 			return searchExpanded;
 		},
+		get checkoutStep() {
+			return checkoutStep;
+		},
+		get selectedDeliveryOption() {
+			return selectedDeliveryOption;
+		},
 		openCartDrawer,
 		closeCartDrawer,
 		toggleCartDrawer,
@@ -93,7 +137,13 @@ function createUiStore() {
 		closeNavDrawer,
 		toggleNavDrawer,
 		toggleSearch,
-		collapseSearch
+		collapseSearch,
+		startCheckout,
+		backToCart,
+		setDeliveryOption,
+		startProcessing,
+		showSuccess,
+		resetCheckout
 	};
 }
 

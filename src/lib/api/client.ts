@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.budy.app';
+import { env } from '$env/dynamic/private';
+
+const API_BASE_URL = env.VITE_API_BASE_URL ?? 'https://api.budy.app';
 
 interface FetchOptions extends RequestInit {
 	params?: Record<string, string | number | undefined>;

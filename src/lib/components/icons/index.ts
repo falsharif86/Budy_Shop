@@ -7,3 +7,6 @@ export { default as IconChevronLeft } from './IconChevronLeft.svelte';
 export { default as IconPlus } from './IconPlus.svelte';
 export { default as IconMinus } from './IconMinus.svelte';
 export { default as IconTrash } from './IconTrash.svelte';
+export { default as IconStore } from './IconStore.svelte';
+export { default as IconDelivery } from './IconDelivery.svelte';
+export { default as IconCheck } from './IconCheck.svelte';

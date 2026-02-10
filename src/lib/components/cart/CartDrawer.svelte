@@ -1,16 +1,13 @@
 <script lang="ts">
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import CartItemComponent from './CartItem.svelte';
+	import CheckoutView from './CheckoutView.svelte';
+	import OrderProcessing from './OrderProcessing.svelte';
+	import OrderSuccess from './OrderSuccess.svelte';
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import { IconCart, IconClose, IconTrash } from '$lib/components/icons/index.js';
-
-	interface Props {
-		oncheckout?: () => void;
-	}
-
-	let { oncheckout }: Props = $props();
 
 	const subtotal = $derived(cart.totalPrice);
 	const taxRate = 0;
@@ -18,94 +15,110 @@
 	const total = $derived(subtotal + taxAmount);
 
 	function handleCheckout() {
+		ui.startCheckout();
+	}
+
+	function handleContinueShopping() {
+		ui.resetCheckout();
 		ui.closeCartDrawer();
-		oncheckout?.();
 	}
 </script>
 
 <Drawer open={ui.cartDrawerOpen} onclose={() => ui.closeCartDrawer()} zIndex={40}>
-	<div class="cart-drawer">
-		<!-- Header -->
-		<div class="cart-header">
-			<div class="cart-header__title">
-				<IconCart class="cart-header__icon" />
-				<h2 class="cart-header__text">Cart ({cart.totalItems})</h2>
-			</div>
-			<button
-				class="cart-header__close-btn"
-				onclick={() => ui.closeCartDrawer()}
-				aria-label="Close cart"
-			>
-				<IconClose class="cart-header__close-icon" />
-			</button>
-		</div>
-
-		<!-- Items -->
-		<div class="cart-items">
-			{#if cart.isEmpty}
-				<div class="cart-empty">
-					<IconCart class="cart-empty__icon" strokeWidth={1} />
-					<p class="cart-empty__title">Your cart is empty</p>
-					<p class="cart-empty__subtitle">Add some products to get started</p>
-					<button
-						class="cart-empty__btn"
-						onclick={() => ui.closeCartDrawer()}
-					>
-						Continue Shopping
-					</button>
+	{#if ui.checkoutStep === 'cart'}
+		<div class="cart-drawer">
+			<!-- Header -->
+			<div class="cart-header">
+				<div class="cart-header__title">
+					<IconCart class="cart-header__icon" />
+					<h2 class="cart-header__text">Cart ({cart.totalItems})</h2>
 				</div>
-			{:else}
-				<div class="cart-items__list">
-					{#each cart.items as item (item.variant ? `${item.product.id}:${item.variant.id}` : item.product.id)}
-						<CartItemComponent {item} />
-					{/each}
+				<button
+					class="cart-header__close-btn"
+					onclick={() => ui.closeCartDrawer()}
+					aria-label="Close cart"
+				>
+					<IconClose class="cart-header__close-icon" />
+				</button>
+			</div>
+
+			<!-- Items -->
+			<div class="cart-items">
+				{#if cart.isEmpty}
+					<div class="cart-empty">
+						<IconCart class="cart-empty__icon" strokeWidth={1} />
+						<p class="cart-empty__title">Your cart is empty</p>
+						<p class="cart-empty__subtitle">Add some products to get started</p>
+						<button
+							class="cart-empty__btn"
+							onclick={() => ui.closeCartDrawer()}
+						>
+							Continue Shopping
+						</button>
+					</div>
+				{:else}
+					<div class="cart-items__list">
+						{#each cart.items as item (item.variant ? `${item.product.id}:${item.variant.id}` : item.product.id)}
+							<CartItemComponent {item} />
+						{/each}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Footer with totals card + dual action buttons -->
+			{#if !cart.isEmpty}
+				<div class="cart-footer">
+					<!-- Totals card -->
+					<div class="cart-totals">
+						<div class="cart-totals__row">
+							<span class="cart-totals__label">Subtotal</span>
+							<span class="cart-totals__value">{formatPrice(subtotal)}</span>
+						</div>
+						<div class="cart-totals__row">
+							<span class="cart-totals__label">Tax (0%)</span>
+							<span class="cart-totals__value">{formatPrice(taxAmount)}</span>
+						</div>
+						<div class="cart-totals__divider"></div>
+						<div class="cart-totals__row">
+							<span class="cart-totals__total-label">Total</span>
+							<span class="cart-totals__total-value">{formatPrice(total)}</span>
+						</div>
+					</div>
+
+					<!-- Dual action buttons -->
+					<div class="cart-actions">
+						<button
+							class="cart-action-btn cart-action-btn--clear"
+							onclick={() => cart.clear()}
+						>
+							<IconTrash class="cart-action-btn__icon" />
+							Clear
+						</button>
+
+						<button
+							class="cart-action-btn cart-action-btn--checkout"
+							onclick={handleCheckout}
+						>
+							<svg class="cart-action-btn__icon-inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+							</svg>
+							Checkout
+						</button>
+					</div>
 				</div>
 			{/if}
 		</div>
-
-		<!-- Footer with totals card + dual action buttons -->
-		{#if !cart.isEmpty}
-			<div class="cart-footer">
-				<!-- Totals card -->
-				<div class="cart-totals">
-					<div class="cart-totals__row">
-						<span class="cart-totals__label">Subtotal</span>
-						<span class="cart-totals__value">{formatPrice(subtotal)}</span>
-					</div>
-					<div class="cart-totals__row">
-						<span class="cart-totals__label">Tax (0%)</span>
-						<span class="cart-totals__value">{formatPrice(taxAmount)}</span>
-					</div>
-					<div class="cart-totals__divider"></div>
-					<div class="cart-totals__row">
-						<span class="cart-totals__total-label">Total</span>
-						<span class="cart-totals__total-value">{formatPrice(total)}</span>
-					</div>
-				</div>
-
-				<!-- Dual action buttons -->
-				<div class="cart-actions">
-					<button
-						class="cart-action-btn cart-action-btn--clear"
-						onclick={() => cart.clear()}
-					>
-						<IconTrash class="cart-action-btn__icon" />
-						Clear
-					</button>
-
-					<button
-						class="cart-action-btn cart-action-btn--checkout"
-						onclick={handleCheckout}
-					>
-						<svg class="cart-action-btn__icon-inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-							<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-						</svg>
-						Checkout
-					</button>
-				</div>
-			</div>
-		{/if}
-	</div>
+	{:else if ui.checkoutStep === 'checkout'}
+		<CheckoutView />
+	{:else if ui.checkoutStep === 'processing'}
+		<div class="cart-drawer">
+			<OrderProcessing />
+		</div>
+	{:else if ui.checkoutStep === 'success'}
+		<div class="cart-drawer">
+			<OrderSuccess oncontinue={handleContinueShopping} />
+		</div>
+	{/if}
 </Drawer>
 
 <style>

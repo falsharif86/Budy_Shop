@@ -1,19 +1,24 @@
 <script lang="ts">
 	import ScrollAwareCategoryBar from '$lib/components/category/ScrollAwareCategoryBar.svelte';
 	import ProductGrid from '$lib/components/product/ProductGrid.svelte';
-	import CheckoutFlow from '$lib/components/checkout/CheckoutFlow.svelte';
 	import { productStore } from '$lib/stores/products.svelte.js';
 
 	let { data } = $props();
 
-	let showCheckout = $state(false);
 	let scrollY = $state(0);
 
-	// Initialize store with SSR data
+	// Initialize store for client-side interactivity (filtering, search)
 	$effect(() => {
 		productStore.setProducts(data.products);
 		productStore.setCategories(data.categories);
 	});
+
+	// Use store products when available (client-side, supports filtering),
+	// fall back to data.products for SSR ($effect doesn't run during SSR,
+	// and $derived in module-level stores doesn't recompute during SSR)
+	let displayProducts = $derived(
+		productStore.allProducts.length > 0 ? productStore.products : data.products
+	);
 
 	function handleScroll(e: Event) {
 		const target = e.target as HTMLElement;
@@ -21,17 +26,13 @@
 	}
 </script>
 
-{#if showCheckout}
-	<CheckoutFlow onback={() => (showCheckout = false)} />
-{:else}
-	<div
-		class="flex h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto pb-24"
-		onscroll={handleScroll}
-	>
-		<!-- Parallax-fading category bar -->
-		<ScrollAwareCategoryBar categories={productStore.categories} {scrollY} />
+<div
+	class="flex h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto pb-24"
+	onscroll={handleScroll}
+>
+	<!-- Parallax-fading category bar -->
+	<ScrollAwareCategoryBar categories={productStore.categories.length > 0 ? productStore.categories : data.categories} {scrollY} />
 
-		<!-- Product grid -->
-		<ProductGrid products={productStore.products} />
-	</div>
-{/if}
+	<!-- Product grid -->
+	<ProductGrid products={displayProducts} />
+</div>
