@@ -72,7 +72,7 @@
 		class="fixed inset-y-0 flex flex-col bg-[var(--md-sys-color-surface)] shadow-2xl"
 		class:right-0={side === 'right'}
 		class:left-0={side === 'left'}
-		style="z-index: {zIndex + 1}; width: min(100vw, 420px); transform: translateX({swipeOffset}px);"
+		style="z-index: {zIndex + 1}; width: min(calc(100vw - 56px), 420px); transform: translateX({swipeOffset}px);"
 		transition:fly={{
 			x: side === 'right' ? 420 : -420,
 			duration: 300,
