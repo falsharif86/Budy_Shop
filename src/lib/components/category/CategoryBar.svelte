@@ -152,38 +152,6 @@
 						<span class="text-[10px] font-medium leading-none text-[var(--md-sys-color-on-surface-variant)]">Back</span>
 					</button>
 
-					<!-- "All in category" button -->
-					<button
-						class="flex shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border px-3 py-2.5 transition-all"
-						class:bg-[var(--md-sys-color-primary-container)]={!productStore.selectedSubCategoryId}
-						class:border-[var(--md-sys-color-primary)]={!productStore.selectedSubCategoryId}
-						class:shadow-[0_0_12px_rgba(0,200,150,0.2)]={!productStore.selectedSubCategoryId}
-						class:bg-[var(--md-sys-color-surface-container-high)]={!!productStore.selectedSubCategoryId}
-						class:border-transparent={!!productStore.selectedSubCategoryId}
-						class:hover:bg-[var(--md-sys-color-surface-container-highest)]={!!productStore.selectedSubCategoryId}
-						style="min-width: 84px; height: 76px;"
-						onclick={() => productStore.selectSubCategory(null)}
-					>
-						<svg
-							class="h-6 w-6"
-							class:text-[var(--md-sys-color-on-primary-container)]={!productStore.selectedSubCategoryId}
-							class:text-[var(--md-sys-color-primary)]={!!productStore.selectedSubCategoryId}
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-							stroke-width="1.5"
-						>
-							<path d="M4 6h16M4 12h16M4 18h16" />
-						</svg>
-						<span
-							class="max-w-[76px] truncate text-[11px] font-medium leading-none"
-							class:text-[var(--md-sys-color-on-primary-container)]={!productStore.selectedSubCategoryId}
-							class:text-[var(--md-sys-color-on-surface-variant)]={!!productStore.selectedSubCategoryId}
-						>
-							All
-						</span>
-					</button>
-
 					{#each subCategories as sub (sub.id)}
 						{@const isSubSelected = productStore.selectedSubCategoryId === sub.id}
 						<button

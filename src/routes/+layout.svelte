@@ -2,6 +2,8 @@
 	import '../app.css';
 	import ShopShell from '$lib/components/layout/ShopShell.svelte';
 	import { initTenantContext } from '$lib/stores/tenant.js';
+	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
+	import { fade } from 'svelte/transition';
 
 	let { data, children } = $props();
 
@@ -12,12 +14,36 @@
 	});
 
 	const tenant = $derived(data.tenant);
+
+	let showSplash = $state(true);
+
+	function handleSplashComplete() {
+		setTimeout(() => {
+			showSplash = false;
+		}, 400);
+	}
 </script>
 
 <svelte:head>
 	<title>{tenant?.name ?? 'Shop'} | Budy</title>
 	<meta name="description" content="{tenant?.name ?? 'Shop'} - Browse products and order online" />
 </svelte:head>
+
+{#if showSplash && tenant}
+	<div
+		class="fixed inset-0 z-50 flex flex-col items-center justify-center"
+		style="background: var(--md-sys-color-surface)"
+		out:fade={{ duration: 300 }}
+	>
+		<BudyLogoSplash size={240} onanimationend={handleSplashComplete} />
+		<p
+			class="splash-name mt-8 text-4xl font-medium"
+			style="color: var(--md-sys-color-on-surface)"
+		>
+			{tenant.name}
+		</p>
+	</div>
+{/if}
 
 {#if tenant}
 	<ShopShell>
@@ -36,3 +62,19 @@
 		</p>
 	</div>
 {/if}
+
+<style>
+	.splash-name {
+		opacity: 0;
+		animation: splash-fade-in 400ms ease 600ms forwards;
+	}
+
+	@keyframes splash-fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+</style>
