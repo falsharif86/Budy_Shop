@@ -2,6 +2,7 @@
 	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { productStore } from '$lib/stores/products.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
+	import budyLogo from '$lib/assets/budy_logo.svg';
 	const tenantCtx = getTenantContext();
 
 	let inputValue = $state('');
@@ -57,6 +58,11 @@
 					<path d="M4 6h16M4 12h16M4 18h16" />
 				</svg>
 			</button>
+		</div>
+
+		<!-- Logo (animates out when search expands) -->
+		<div class="logo-wrap lg:!hidden" class:collapsed={expanded}>
+			<img src={budyLogo} alt="Budy" class="h-7 w-7" />
 		</div>
 
 		<!-- Tenant branding (centered, animates out) -->
@@ -120,6 +126,26 @@
 	.burger-wrap.collapsed {
 		width: 0;
 		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* --- Logo wrapper --- */
+	.logo-wrap {
+		width: 36px;
+		opacity: 1;
+		overflow: hidden;
+		flex-shrink: 0;
+		margin-right: 4px;
+		transition:
+			width 300ms cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 200ms ease,
+			margin 300ms cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.logo-wrap.collapsed {
+		width: 0;
+		opacity: 0;
+		margin-right: 0;
 		pointer-events: none;
 	}
 

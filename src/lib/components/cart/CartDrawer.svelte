@@ -11,6 +11,11 @@
 
 	let { oncheckout }: Props = $props();
 
+	const subtotal = $derived(cart.totalPrice);
+	const taxRate = 0;
+	const taxAmount = $derived(subtotal * taxRate);
+	const total = $derived(subtotal + taxAmount);
+
 	function handleCheckout() {
 		ui.closeCartDrawer();
 		oncheckout?.();
@@ -41,7 +46,7 @@
 		</div>
 
 		<!-- Items -->
-		<div class="flex-1 overflow-y-auto px-5">
+		<div class="flex-1 overflow-y-auto px-3 pt-2">
 			{#if cart.isEmpty}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
 					<svg class="mb-4 h-20 w-20 text-[var(--md-sys-color-outline-variant)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
@@ -61,7 +66,7 @@
 					</button>
 				</div>
 			{:else}
-				<div class="divide-y divide-[var(--md-sys-color-outline-variant)]/20">
+				<div class="flex flex-col gap-2">
 					{#each cart.items as item (item.variant ? `${item.product.id}:${item.variant.id}` : item.product.id)}
 						<CartItemComponent {item} />
 					{/each}
@@ -69,34 +74,54 @@
 			{/if}
 		</div>
 
-		<!-- Footer with totals -->
+		<!-- Footer with totals card + dual action buttons -->
 		{#if !cart.isEmpty}
-			<div class="border-t border-[var(--md-sys-color-outline-variant)]/30 bg-[var(--md-sys-color-surface)] p-5">
-				<!-- Clear cart -->
-				<div class="mb-3 flex items-center justify-between">
+			<div class="bg-[var(--md-sys-color-surface)] pt-3 pb-6">
+				<!-- Totals card -->
+				<div class="mx-4 rounded-xl bg-[var(--md-sys-color-surface-container)]/90 p-4">
+					<!-- Subtotal -->
+					<div class="flex items-center justify-between">
+						<span class="text-sm text-[var(--md-sys-color-on-surface-variant)]">Subtotal</span>
+						<span class="text-sm font-medium text-[var(--md-sys-color-on-surface)]">{formatPrice(subtotal)}</span>
+					</div>
+					<!-- Tax -->
+					<div class="mt-1.5 flex items-center justify-between">
+						<span class="text-sm text-[var(--md-sys-color-on-surface-variant)]">Tax (0%)</span>
+						<span class="text-sm font-medium text-[var(--md-sys-color-on-surface)]">{formatPrice(taxAmount)}</span>
+					</div>
+					<!-- Divider -->
+					<div class="my-3 border-t border-[var(--md-sys-color-outline-variant)]/30"></div>
+					<!-- Total -->
+					<div class="flex items-center justify-between">
+						<span class="text-base font-bold text-[var(--md-sys-color-on-surface)]">Total</span>
+						<span class="text-xl font-bold text-[var(--md-sys-color-primary)]">{formatPrice(total)}</span>
+					</div>
+				</div>
+
+				<!-- Dual action buttons -->
+				<div class="mt-3 flex gap-3 px-4">
+					<!-- Clear button -->
 					<button
-						class="text-sm text-[var(--md-sys-color-error)] hover:underline"
+						class="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--md-sys-color-secondary)] text-base font-medium text-[var(--md-sys-color-on-secondary)] transition-transform active:scale-[0.98]"
 						onclick={() => cart.clear()}
 					>
-						Clear cart
+						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+						</svg>
+						Clear
+					</button>
+
+					<!-- Checkout button -->
+					<button
+						class="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--md-sys-color-primary)] text-base font-medium text-[var(--md-sys-color-on-primary)] shadow-lg shadow-[var(--md-sys-color-primary)]/25 transition-transform active:scale-[0.98]"
+						onclick={handleCheckout}
+					>
+						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+						</svg>
+						Checkout
 					</button>
 				</div>
-
-				<!-- Totals -->
-				<div class="mb-4 flex items-center justify-between">
-					<span class="text-base font-medium text-[var(--md-sys-color-on-surface-variant)]">Total</span>
-					<span class="text-xl font-bold text-[var(--md-sys-color-on-surface)]">
-						{formatPrice(cart.totalPrice)}
-					</span>
-				</div>
-
-				<!-- Checkout button -->
-				<button
-					class="w-full rounded-full bg-[var(--md-sys-color-primary)] py-3.5 text-base font-medium text-[var(--md-sys-color-on-primary)] transition-transform active:scale-[0.98]"
-					onclick={handleCheckout}
-				>
-					Checkout
-				</button>
 			</div>
 		{/if}
 	</div>
