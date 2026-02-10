@@ -6,6 +6,8 @@ function createUiStore() {
 	let selectedProduct = $state<Product | null>(null);
 	let searchQuery = $state('');
 	let searchFocused = $state(false);
+	let navDrawerOpen = $state(false);
+	let searchExpanded = $state(false);
 
 	function openCartDrawer() {
 		cartDrawerOpen = true;
@@ -36,6 +38,26 @@ function createUiStore() {
 		searchQuery = q;
 	}
 
+	function openNavDrawer() {
+		navDrawerOpen = true;
+	}
+
+	function closeNavDrawer() {
+		navDrawerOpen = false;
+	}
+
+	function toggleNavDrawer() {
+		navDrawerOpen = !navDrawerOpen;
+	}
+
+	function toggleSearch() {
+		searchExpanded = !searchExpanded;
+	}
+
+	function collapseSearch() {
+		searchExpanded = false;
+	}
+
 	return {
 		get cartDrawerOpen() {
 			return cartDrawerOpen;
@@ -55,12 +77,23 @@ function createUiStore() {
 		set searchFocused(v: boolean) {
 			searchFocused = v;
 		},
+		get navDrawerOpen() {
+			return navDrawerOpen;
+		},
+		get searchExpanded() {
+			return searchExpanded;
+		},
 		openCartDrawer,
 		closeCartDrawer,
 		toggleCartDrawer,
 		openProductDrawer,
 		closeProductDrawer,
-		setSearchQuery
+		setSearchQuery,
+		openNavDrawer,
+		closeNavDrawer,
+		toggleNavDrawer,
+		toggleSearch,
+		collapseSearch
 	};
 }
 

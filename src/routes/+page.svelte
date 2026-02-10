@@ -1,5 +1,4 @@
 <script lang="ts">
-	import SearchBar from '$lib/components/search/SearchBar.svelte';
 	import ScrollAwareCategoryBar from '$lib/components/category/ScrollAwareCategoryBar.svelte';
 	import ProductGrid from '$lib/components/product/ProductGrid.svelte';
 	import CheckoutFlow from '$lib/components/checkout/CheckoutFlow.svelte';
@@ -26,14 +25,9 @@
 	<CheckoutFlow onback={() => (showCheckout = false)} />
 {:else}
 	<div
-		class="flex h-dvh flex-col overflow-y-auto pb-24"
+		class="flex h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto pb-24"
 		onscroll={handleScroll}
 	>
-		<!-- Sticky search bar -->
-		<div class="sticky top-0 z-10 pb-2 pt-3" style="background: linear-gradient(to bottom, var(--md-sys-color-surface) 60%, transparent);">
-			<SearchBar />
-		</div>
-
 		<!-- Parallax-fading category bar -->
 		<ScrollAwareCategoryBar categories={productStore.categories} {scrollY} />
 
