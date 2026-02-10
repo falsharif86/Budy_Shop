@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import ShopShell from '$lib/components/layout/ShopShell.svelte';
-	import { initTenantContext } from '$lib/stores/tenant.js';
+	import { initTenantContext } from '$lib/stores/tenant.svelte.js';
 	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
 	import { fade } from 'svelte/transition';
 

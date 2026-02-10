@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Drawer from '$lib/components/shared/Drawer.svelte';
-	import { getTenantContext } from '$lib/stores/tenant.js';
+	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import budyLogo from '$lib/assets/budy_logo.svg';
 
-	const tenant = getTenantContext();
+	const tenantCtx = getTenantContext();
 
 	// Placeholder until auth system exists
 	let isLoggedIn = $state(false);
@@ -32,17 +32,28 @@
 
 	function handleItemClick(label: string) {
 		activeItem = label;
-		// Navigation not wired yet — just close drawer
 		ui.closeNavDrawer();
 	}
 </script>
 
-<Drawer open={ui.navDrawerOpen} side="left" onclose={() => ui.closeNavDrawer()}>
+<!-- Mobile: overlay drawer -->
+<div class="lg:hidden">
+	<Drawer open={ui.navDrawerOpen} side="left" onclose={() => ui.closeNavDrawer()}>
+		{@render navContent()}
+	</Drawer>
+</div>
+
+<!-- Desktop: fixed side pane -->
+<aside class="desktop-pane">
+	{@render navContent()}
+</aside>
+
+{#snippet navContent()}
 	<div class="nav-drawer">
 		<!-- Header: Logo + Tenant Name -->
 		<div class="nav-header">
 			<img src={budyLogo} alt="Budy" class="nav-logo" />
-			<span class="nav-tenant">{tenant?.name ?? 'Shop'}</span>
+			<span class="nav-tenant">{tenantCtx.value?.name ?? 'Shop'}</span>
 		</div>
 
 		<!-- Menu Items -->
@@ -110,9 +121,29 @@
 			{/if}
 		</div>
 	</div>
-</Drawer>
+{/snippet}
 
 <style>
+	/* ---- Desktop fixed pane ---- */
+	.desktop-pane {
+		display: none;
+	}
+
+	@media (min-width: 1024px) {
+		.desktop-pane {
+			display: flex;
+			flex-direction: column;
+			position: fixed;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			width: 280px;
+			z-index: 10;
+			background: var(--md-sys-color-surface);
+			border-right: 1px solid var(--md-sys-color-outline-variant);
+		}
+	}
+
 	.nav-drawer {
 		display: flex;
 		flex-direction: column;

@@ -72,11 +72,11 @@
 		class="fixed inset-y-0 flex flex-col bg-[var(--md-sys-color-surface)] shadow-2xl"
 		class:right-0={side === 'right'}
 		class:left-0={side === 'left'}
-		class:rounded-r-2xl={side === 'left'}
-		class:rounded-l-2xl={side === 'right'}
-		style="z-index: {zIndex + 1}; width: min(calc(100vw - 56px), 420px); transform: translateX({swipeOffset}px);"
+		class:rounded-r-3xl={side === 'left'}
+		class:rounded-l-3xl={side === 'right'}
+		style="z-index: {zIndex + 1}; width: min(calc(100vw - 56px), 320px); transform: translateX({swipeOffset}px);"
 		transition:fly={{
-			x: side === 'right' ? 420 : -420,
+			x: side === 'right' ? 320 : -320,
 			duration: 300,
 			easing: cubicOut
 		}}

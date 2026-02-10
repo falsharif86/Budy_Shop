@@ -7,13 +7,18 @@ export interface TenantContext {
 	name: string;
 }
 
+interface TenantStore {
+	readonly value: TenantContext | null;
+	set: (t: TenantContext | null) => void;
+}
+
 /**
  * Create tenant context during component init.
  * Call getTenantContext() in child components to read it.
  */
-export function initTenantContext(): { set: (t: TenantContext | null) => void } {
-	let current: TenantContext | null = null;
-	const ctx = {
+export function initTenantContext(): TenantStore {
+	let current = $state<TenantContext | null>(null);
+	const ctx: TenantStore = {
 		get value() {
 			return current;
 		},
@@ -25,7 +30,6 @@ export function initTenantContext(): { set: (t: TenantContext | null) => void } 
 	return ctx;
 }
 
-export function getTenantContext(): TenantContext | null {
-	const ctx = getContext<{ value: TenantContext | null }>(TENANT_KEY);
-	return ctx?.value ?? null;
+export function getTenantContext(): TenantStore {
+	return getContext<TenantStore>(TENANT_KEY);
 }

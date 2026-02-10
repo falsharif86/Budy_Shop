@@ -53,7 +53,7 @@
 		if (isAnimating) return;
 		isAnimating = true;
 		showSubcategories = false;
-		productStore.selectSubCategory(null);
+		productStore.selectCategory(null);
 		setTimeout(() => {
 			isAnimating = false;
 		}, 300);
@@ -65,7 +65,7 @@
 	}
 </script>
 
-<div class="px-4 pt-3 pb-3">
+<div class="category-bar-root px-4 pt-3 pb-3">
 	<div class="category-slider" class:show-subcategories={showSubcategories}>
 		<!-- Categories row -->
 		<div class="category-slider__row category-slider__row--categories">
@@ -241,5 +241,11 @@
 		opacity: 1;
 		position: relative;
 		pointer-events: auto;
+	}
+
+	@media (min-width: 1024px) {
+		.category-bar-root {
+			padding-left: 1rem;
+		}
 	}
 </style>

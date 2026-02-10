@@ -19,7 +19,7 @@
 	</div>
 {:else}
 	<div
-		class="grid justify-items-center gap-3 px-4 pt-14"
+		class="product-grid grid justify-items-center gap-3 px-4 pt-14"
 		style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));"
 	>
 		{#each products as product, i (product.id)}
@@ -27,3 +27,12 @@
 		{/each}
 	</div>
 {/if}
+
+<style>
+	@media (min-width: 1024px) {
+		.product-grid {
+			padding-left: 1rem;
+			padding-right: 1rem;
+		}
+	}
+</style>

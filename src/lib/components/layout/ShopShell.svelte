@@ -13,7 +13,10 @@
 	let { children }: Props = $props();
 </script>
 
-<div class="flex min-h-dvh flex-col">
+<!-- Navigation Drawer (outside shifted container so the fixed pane isn't offset) -->
+<NavigationDrawer />
+
+<div class="shell-content">
 	<Header />
 
 	<main class="flex-1">
@@ -30,7 +33,18 @@
 	{#if ui.selectedProduct}
 		<ProductDetails product={ui.selectedProduct} />
 	{/if}
-
-	<!-- Navigation Drawer -->
-	<NavigationDrawer />
 </div>
+
+<style>
+	.shell-content {
+		display: flex;
+		flex-direction: column;
+		min-height: 100dvh;
+	}
+
+	@media (min-width: 1024px) {
+		.shell-content {
+			margin-left: 280px;
+		}
+	}
+</style>
