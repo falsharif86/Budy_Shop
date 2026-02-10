@@ -9,12 +9,12 @@
 	let { categories }: Props = $props();
 </script>
 
-<div class="px-4 py-3">
+<div class="px-4 pt-3 pb-3">
 	<div class="no-scrollbar flex gap-2.5 overflow-x-auto">
 		<!-- "All" button when a category is selected -->
 		{#if productStore.selectedCategoryId}
 			<button
-				class="flex shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container)] px-3 py-2.5 transition-colors hover:bg-[var(--md-sys-color-surface-container-high)]"
+				class="flex shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[var(--md-sys-color-outline-variant)] bg-[var(--md-sys-color-surface-container-high)] px-3 py-2.5 transition-colors hover:bg-[var(--md-sys-color-surface-container-highest)]"
 				style="min-width: 84px; height: 76px;"
 				onclick={() => productStore.selectCategory(null)}
 				aria-label="Clear category filter"
@@ -33,9 +33,9 @@
 				class:bg-[var(--md-sys-color-primary-container)]={isSelected}
 				class:border-[var(--md-sys-color-primary)]={isSelected}
 				class:shadow-[0_0_12px_rgba(0,200,150,0.2)]={isSelected}
-				class:bg-[var(--md-sys-color-surface-container)]={!isSelected}
+				class:bg-[var(--md-sys-color-surface-container-high)]={!isSelected}
 				class:border-transparent={!isSelected}
-				class:hover:bg-[var(--md-sys-color-surface-container-high)]={!isSelected}
+				class:hover:bg-[var(--md-sys-color-surface-container-highest)]={!isSelected}
 				style="min-width: 84px; height: 76px;"
 				onclick={() => productStore.selectCategory(
 					isSelected ? null : category.id

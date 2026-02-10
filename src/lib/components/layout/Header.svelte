@@ -44,7 +44,7 @@
 	}
 </script>
 
-<header class="sticky top-0 z-20 border-b border-[var(--md-sys-color-outline-variant)]/15 bg-[var(--md-sys-color-surface)]/90 backdrop-blur-lg">
+<header class="header sticky top-0 z-20 bg-[var(--md-sys-color-surface)]">
 	<div class="mx-auto flex h-14 max-w-7xl items-center px-2 sm:px-4">
 		<!-- Burger button (stays in DOM, animates width to 0) -->
 		<div class="burger-wrap" class:collapsed={expanded}>
@@ -174,5 +174,21 @@
 		opacity: 1;
 		pointer-events: auto;
 		transition: opacity 200ms 120ms ease;
+	}
+
+	/* --- Bottom fade-out into transparency --- */
+	.header::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 100%;
+		height: 1rem;
+		background: linear-gradient(
+			to bottom,
+			var(--md-sys-color-surface),
+			transparent
+		);
+		pointer-events: none;
 	}
 </style>
