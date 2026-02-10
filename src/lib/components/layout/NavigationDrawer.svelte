@@ -2,6 +2,7 @@
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
+	import { version } from '$app/environment';
 	import budyLogo from '$lib/assets/budy_logo.svg';
 
 	const tenantCtx = getTenantContext();
@@ -94,6 +95,9 @@
 
 		<!-- Separator -->
 		<div class="nav-separator"></div>
+
+		<!-- Version -->
+		<span class="nav-version">v{version}</span>
 
 		<!-- Bottom Section -->
 		<div class="nav-bottom">
@@ -248,6 +252,16 @@
 		height: 1px;
 		margin: 0 1.25rem;
 		background: var(--md-sys-color-outline-variant);
+	}
+
+	/* ---- Version ---- */
+	.nav-version {
+		display: block;
+		text-align: center;
+		padding: 0.5rem 1.25rem;
+		font: var(--md-sys-typescale-label-small);
+		color: var(--md-sys-color-on-surface-variant);
+		opacity: 0.5;
 	}
 
 	/* ---- Bottom ---- */
