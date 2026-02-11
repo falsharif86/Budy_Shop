@@ -33,6 +33,15 @@
 	let activeItem = $state<string | null>(null);
 
 	function handleItemClick(label: string) {
+		if (label === 'My Addresses') {
+			if (!isLoggedIn) {
+				handleSignIn();
+				return;
+			}
+			ui.closeNavDrawer();
+			setTimeout(() => ui.openAddressDrawer(), 200);
+			return;
+		}
 		activeItem = label;
 		ui.closeNavDrawer();
 	}

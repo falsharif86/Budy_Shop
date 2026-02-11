@@ -4,6 +4,8 @@
 	import CartFab from '$lib/components/cart/CartFab.svelte';
 	import CartDrawer from '$lib/components/cart/CartDrawer.svelte';
 	import ProductDetails from '$lib/components/product/ProductDetails.svelte';
+	import Drawer from '$lib/components/shared/Drawer.svelte';
+	import MyAddressesView from '$lib/components/address/MyAddressesView.svelte';
 	import { ui } from '$lib/stores/ui.svelte.js';
 
 	interface Props {
@@ -32,6 +34,13 @@
 	<!-- Product Details Drawer -->
 	{#if ui.selectedProduct}
 		<ProductDetails product={ui.selectedProduct} />
+	{/if}
+
+	<!-- Address Drawer -->
+	{#if ui.addressDrawerOpen}
+		<Drawer open={true} side="right" onclose={() => ui.closeAddressDrawer()}>
+			<MyAddressesView />
+		</Drawer>
 	{/if}
 </div>
 

@@ -19,6 +19,17 @@ export interface OnlineOrderDetail {
 	customerName: string | null;
 	customerPhone: string | null;
 	customerNotes: string | null;
+	onlineMemberEmail?: string | null;
+	deliveryLabel?: string | null;
+	deliveryStreetAddress?: string | null;
+	deliveryHouseNumber?: string | null;
+	deliveryFloor?: string | null;
+	deliveryBuilding?: string | null;
+	deliveryCity?: string | null;
+	deliveryPostalCode?: string | null;
+	deliveryCountry?: string | null;
+	deliveryLatitude?: number | null;
+	deliveryLongitude?: number | null;
 }
 
 export interface OnlineOrderItem {

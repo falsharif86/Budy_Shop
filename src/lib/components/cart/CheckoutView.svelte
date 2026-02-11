@@ -1,12 +1,17 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import { orderStore } from '$lib/stores/orders.svelte.js';
+	import { addressStore } from '$lib/stores/addresses.svelte.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import { getCartItemPrice, getCartItemName, getCartItemId } from '$lib/types/cart.js';
 	import type { OnlineOrderDetail } from '$lib/types/order.js';
-	import { IconChevronLeft, IconClose, IconStore, IconDelivery, IconCheck } from '$lib/components/icons/index.js';
+	import type { MemberAddress } from '$lib/types/address.js';
+	import { IconChevronLeft, IconClose, IconStore, IconDelivery, IconCheck, IconPlus } from '$lib/components/icons/index.js';
+	import AddressCard from '$lib/components/address/AddressCard.svelte';
 
+	const user = $derived(page.data.user);
 	const subtotal = $derived(cart.totalPrice);
 	const taxRate = 0;
 	const taxAmount = $derived(subtotal * taxRate);
@@ -17,11 +22,31 @@
 	let customerNotes = $state('');
 	let submitting = $state(false);
 	let errorMessage = $state<string | null>(null);
+	let selectedAddressId = $state<string | null>(null);
 
 	const phoneDigits = $derived(customerPhone.replace(/\D/g, ''));
 	const phoneValid = $derived(phoneDigits.length >= 7);
 	const isPickup = $derived(ui.selectedDeliveryOption === 'pickup');
-	const canPlaceOrder = $derived(isPickup && phoneValid && !submitting);
+	const isDelivery = $derived(ui.selectedDeliveryOption === 'delivery');
+
+	const selectedAddress = $derived<MemberAddress | null>(
+		selectedAddressId
+			? addressStore.addresses.find((a) => a.id === selectedAddressId) ?? null
+			: null
+	);
+
+	// Auto-select default address when delivery is chosen
+	$effect(() => {
+		if (isDelivery && !selectedAddressId && addressStore.defaultAddress) {
+			selectedAddressId = addressStore.defaultAddress.id;
+		}
+	});
+
+	const canPlaceOrder = $derived(
+		phoneValid &&
+		!submitting &&
+		(isPickup || (isDelivery && !!selectedAddress))
+	);
 
 	async function handlePlaceOrder() {
 		if (!canPlaceOrder) return;
@@ -30,18 +55,40 @@
 		ui.startProcessing();
 
 		try {
-			const body = {
+			const body: Record<string, unknown> = {
 				items: cart.items.map((item) => ({
 					productId: item.product.id,
 					variantId: item.variant?.id ?? null,
 					quantity: item.quantity,
 					unitPrice: getCartItemPrice(item)
 				})),
-				fulfillmentType: 0,
+				fulfillmentType: isDelivery ? 1 : 0,
 				customerName: customerName.trim() || null,
 				customerPhone: customerPhone.trim(),
 				customerNotes: customerNotes.trim() || null
 			};
+
+			if (user) {
+				body.memberEmail = user.email;
+			}
+			if (addressStore.memberId) {
+				body.memberId = addressStore.memberId;
+			}
+
+			if (isDelivery && selectedAddress) {
+				body.deliveryAddress = {
+					label: selectedAddress.label,
+					streetAddress: selectedAddress.streetAddress,
+					houseNumber: selectedAddress.houseNumber,
+					floor: selectedAddress.floor,
+					building: selectedAddress.building,
+					city: selectedAddress.city,
+					postalCode: selectedAddress.postalCode,
+					country: selectedAddress.country,
+					latitude: selectedAddress.latitude,
+					longitude: selectedAddress.longitude
+				};
+			}
 
 			const res = await fetch('/api/orders', {
 				method: 'POST',
@@ -60,6 +107,7 @@
 			customerPhone = '';
 			customerName = '';
 			customerNotes = '';
+			selectedAddressId = null;
 			ui.showSuccess();
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Failed to place order. Please try again.';
@@ -71,6 +119,12 @@
 
 	function dismissError() {
 		errorMessage = null;
+	}
+
+	function handleAddAddress() {
+		ui.closeCartDrawer();
+		setTimeout(() => ui.openAddressDrawer(), 200);
+		setTimeout(() => ui.showAddressForm('create'), 250);
 	}
 </script>
 
@@ -164,17 +218,49 @@
 					<span class="delivery-card__label">Pick up at Store</span>
 				</button>
 
-				<!-- Deliver (disabled) -->
-				<div class="delivery-card delivery-card--disabled">
-					<div class="delivery-card__badge">Coming Soon</div>
+				<!-- Deliver -->
+				<button
+					class="delivery-card"
+					class:delivery-card--selected={isDelivery}
+					onclick={() => ui.setDeliveryOption('delivery')}
+				>
+					{#if isDelivery}
+						<div class="delivery-card__check">
+							<IconCheck class="delivery-card__check-icon" />
+						</div>
+					{/if}
 					<IconDelivery class="delivery-card__icon" />
 					<span class="delivery-card__label">Deliver</span>
-				</div>
+				</button>
 			</div>
+
+			<!-- Address selection for delivery -->
+			{#if isDelivery}
+				<div class="delivery-addresses">
+					{#if addressStore.addresses.length > 0}
+						<div class="delivery-addresses__list">
+							{#each addressStore.addresses as address (address.id)}
+								<AddressCard
+									{address}
+									selectable
+									selected={selectedAddressId === address.id}
+									onselect={() => (selectedAddressId = address.id)}
+								/>
+							{/each}
+						</div>
+					{:else}
+						<p class="delivery-addresses__empty">No saved addresses. Add one to continue.</p>
+					{/if}
+					<button class="delivery-addresses__add" onclick={handleAddAddress}>
+						<IconPlus class="delivery-addresses__add-icon" />
+						<span>Add New Address</span>
+					</button>
+				</div>
+			{/if}
 		</div>
 
-		<!-- Contact information (visible when pickup selected) -->
-		{#if isPickup}
+		<!-- Contact information (visible when option selected) -->
+		{#if isPickup || isDelivery}
 			<div class="checkout-section contact-section">
 				<h3 class="checkout-section__title">
 					<svg class="checkout-section__title-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -494,11 +580,6 @@
 		border-color: var(--md-sys-color-primary);
 	}
 
-	.delivery-card--disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
-
 	:global(.delivery-card__icon) {
 		width: 32px;
 		height: 32px;
@@ -532,20 +613,6 @@
 		width: 14px;
 		height: 14px;
 		color: var(--md-sys-color-on-primary);
-	}
-
-	.delivery-card__badge {
-		position: absolute;
-		top: 8px;
-		right: 8px;
-		padding: 2px 8px;
-		border-radius: 9999px;
-		background: var(--md-sys-color-surface-container-highest);
-		font-size: 0.625rem;
-		font-weight: 600;
-		color: var(--md-sys-color-on-surface-variant);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
 	}
 
 	/* --- Contact fields --- */
@@ -678,5 +745,53 @@
 		color: var(--md-sys-color-on-primary);
 		opacity: 1;
 		box-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-primary) 25%, transparent);
+	}
+
+	/* --- Delivery addresses --- */
+	.delivery-addresses {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		margin-top: 12px;
+		animation: slide-in 200ms ease-out;
+	}
+
+	.delivery-addresses__list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.delivery-addresses__empty {
+		padding: 16px;
+		text-align: center;
+		font-size: 0.8125rem;
+		color: var(--md-sys-color-outline);
+	}
+
+	.delivery-addresses__add {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 10px;
+		border-radius: 10px;
+		border: 1.5px dashed var(--md-sys-color-outline-variant);
+		background: transparent;
+		color: var(--md-sys-color-primary);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background-color 150ms ease, border-color 150ms ease;
+	}
+
+	.delivery-addresses__add:hover {
+		background: color-mix(in srgb, var(--md-sys-color-primary) 6%, transparent);
+		border-color: var(--md-sys-color-primary);
+	}
+
+	:global(.delivery-addresses__add-icon) {
+		width: 16px;
+		height: 16px;
 	}
 </style>

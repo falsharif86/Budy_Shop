@@ -6,7 +6,7 @@ export async function POST({ request, locals }: RequestEvent) {
 		return json({ error: 'Tenant not found' }, { status: 404 });
 	}
 
-	const api = createApiClient(locals.tenant.id);
+	const api = createApiClient(locals.tenant.id, locals.user?.accessToken);
 
 	try {
 		const body = await request.json();

@@ -4,6 +4,7 @@
 	import { initTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { orderStore } from '$lib/stores/orders.svelte.js';
+	import { addressStore } from '$lib/stores/addresses.svelte.js';
 	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
 	import { fade } from 'svelte/transition';
 
@@ -19,6 +20,15 @@
 		if (data.tenant) {
 			cart.initPersistence(data.tenant.id);
 			orderStore.initPersistence(data.tenant.id);
+		}
+	});
+
+	$effect(() => {
+		if (data.user) {
+			addressStore.loadProfile();
+			addressStore.load();
+		} else {
+			addressStore.clear();
 		}
 	});
 

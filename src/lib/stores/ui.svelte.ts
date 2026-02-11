@@ -2,6 +2,7 @@ import type { Product } from '$lib/types/product.js';
 
 export type CheckoutStep = 'cart' | 'checkout' | 'processing' | 'success';
 export type DeliveryOption = 'pickup' | 'delivery';
+export type AddressFormMode = 'list' | 'create' | 'edit';
 
 function createUiStore() {
 	let cartDrawerOpen = $state(false);
@@ -13,6 +14,9 @@ function createUiStore() {
 	let searchExpanded = $state(false);
 	let checkoutStep = $state<CheckoutStep>('cart');
 	let selectedDeliveryOption = $state<DeliveryOption | null>(null);
+	let addressDrawerOpen = $state(false);
+	let addressFormMode = $state<AddressFormMode>('list');
+	let editingAddressId = $state<string | null>(null);
 
 	function openCartDrawer() {
 		cartDrawerOpen = true;
@@ -96,6 +100,32 @@ function createUiStore() {
 		selectedDeliveryOption = null;
 	}
 
+	function openAddressDrawer() {
+		addressDrawerOpen = true;
+		addressFormMode = 'list';
+		editingAddressId = null;
+	}
+
+	function closeAddressDrawer() {
+		addressDrawerOpen = false;
+		setTimeout(() => {
+			if (!addressDrawerOpen) {
+				addressFormMode = 'list';
+				editingAddressId = null;
+			}
+		}, 350);
+	}
+
+	function showAddressForm(mode: 'create' | 'edit', id?: string) {
+		addressFormMode = mode;
+		editingAddressId = mode === 'edit' ? (id ?? null) : null;
+	}
+
+	function showAddressList() {
+		addressFormMode = 'list';
+		editingAddressId = null;
+	}
+
 	return {
 		get cartDrawerOpen() {
 			return cartDrawerOpen;
@@ -127,6 +157,15 @@ function createUiStore() {
 		get selectedDeliveryOption() {
 			return selectedDeliveryOption;
 		},
+		get addressDrawerOpen() {
+			return addressDrawerOpen;
+		},
+		get addressFormMode() {
+			return addressFormMode;
+		},
+		get editingAddressId() {
+			return editingAddressId;
+		},
 		openCartDrawer,
 		closeCartDrawer,
 		toggleCartDrawer,
@@ -143,7 +182,11 @@ function createUiStore() {
 		setDeliveryOption,
 		startProcessing,
 		showSuccess,
-		resetCheckout
+		resetCheckout,
+		openAddressDrawer,
+		closeAddressDrawer,
+		showAddressForm,
+		showAddressList
 	};
 }
 
