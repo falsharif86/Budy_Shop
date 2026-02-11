@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
@@ -7,8 +8,8 @@
 
 	const tenantCtx = getTenantContext();
 
-	// Placeholder until auth system exists
-	let isLoggedIn = $state(false);
+	const user = $derived(page.data.user);
+	const isLoggedIn = $derived(!!user);
 
 	const menuItems = [
 		{
@@ -34,6 +35,20 @@
 	function handleItemClick(label: string) {
 		activeItem = label;
 		ui.closeNavDrawer();
+	}
+
+	function handleSignIn() {
+		ui.closeNavDrawer();
+		window.location.href = '/auth/login';
+	}
+
+	async function handleSignOut() {
+		ui.closeNavDrawer();
+		const form = document.createElement('form');
+		form.method = 'POST';
+		form.action = '/auth/logout';
+		document.body.appendChild(form);
+		form.submit();
 	}
 </script>
 
@@ -101,22 +116,26 @@
 
 		<!-- Bottom Section -->
 		<div class="nav-bottom">
-			{#if isLoggedIn}
+			{#if isLoggedIn && user}
 				<!-- User card -->
-				<button class="user-card" onclick={() => ui.closeNavDrawer()}>
+				<div class="user-card">
 					<div class="user-avatar">
-						<span class="user-initial">J</span>
+						<span class="user-initial">{user.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
 					</div>
 					<div class="user-info">
-						<span class="user-email">john@example.com</span>
+						<span class="user-name">{user.name}</span>
+						<span class="user-email">{user.email}</span>
 					</div>
-					<svg class="user-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-						<path d="M9 5l7 7-7 7" />
+				</div>
+				<button class="sign-out-btn" onclick={handleSignOut}>
+					<svg class="sign-out-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+						<path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
 					</svg>
+					<span class="sign-out-label">Sign out</span>
 				</button>
 			{:else}
 				<!-- Sign in button -->
-				<button class="sign-in-btn" onclick={() => ui.closeNavDrawer()}>
+				<button class="sign-in-btn" onclick={handleSignIn}>
 					<svg class="sign-in-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
 						<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
 					</svg>
@@ -278,14 +297,8 @@
 		padding: 0.75rem;
 		border-radius: var(--md-sys-shape-corner-large);
 		background: var(--md-sys-color-surface-container);
-		border: none;
-		cursor: pointer;
 		color: var(--md-sys-color-on-surface);
-		transition: background-color 150ms ease;
-	}
-
-	.user-card:hover {
-		background: var(--md-sys-color-surface-container-high);
+		margin-bottom: 0.5rem;
 	}
 
 	.user-avatar {
@@ -310,8 +323,8 @@
 		text-align: left;
 	}
 
-	.user-email {
-		font: var(--md-sys-typescale-body-medium);
+	.user-name {
+		font: var(--md-sys-typescale-label-large);
 		color: var(--md-sys-color-on-surface);
 		white-space: nowrap;
 		overflow: hidden;
@@ -319,12 +332,43 @@
 		display: block;
 	}
 
-	.user-chevron {
-		width: 1rem;
-		height: 1rem;
+	.user-email {
+		font: var(--md-sys-typescale-label-medium);
 		color: var(--md-sys-color-on-surface-variant);
-		opacity: 0.5;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: block;
+	}
+
+	/* -- Sign out button -- */
+	.sign-out-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.625rem;
+		width: 100%;
+		padding: 0.625rem 1rem;
+		border-radius: var(--md-sys-shape-corner-medium);
+		background: transparent;
+		border: 1px solid var(--md-sys-color-outline-variant);
+		cursor: pointer;
+		color: var(--md-sys-color-on-surface-variant);
+		transition: background-color 150ms ease;
+	}
+
+	.sign-out-btn:hover {
+		background: var(--md-sys-color-surface-container);
+	}
+
+	.sign-out-icon {
+		width: 1.125rem;
+		height: 1.125rem;
 		flex-shrink: 0;
+	}
+
+	.sign-out-label {
+		font: var(--md-sys-typescale-label-large);
 	}
 
 	/* -- Sign in button -- */

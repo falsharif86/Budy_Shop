@@ -1,5 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { extractSubdomain, resolveTenant } from '$lib/server/tenant.js';
+import { getSession } from '$lib/server/auth.js';
 import { env } from '$env/dynamic/private';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -23,6 +24,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.tenant = null;
 		}
 	}
+
+	// Load user session from cookie
+	const session = getSession(event.cookies);
+	event.locals.user = session
+		? {
+				id: session.userId,
+				email: session.email,
+				name: session.name,
+				accessToken: session.accessToken,
+				roles: session.roles
+			}
+		: null;
 
 	return resolve(event);
 };

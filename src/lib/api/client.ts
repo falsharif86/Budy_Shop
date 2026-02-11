@@ -6,7 +6,7 @@ interface FetchOptions extends RequestInit {
 	params?: Record<string, string | number | undefined>;
 }
 
-export function createApiClient(tenantId: string) {
+export function createApiClient(tenantId: string, accessToken?: string) {
 	async function request<T>(path: string, options: FetchOptions = {}): Promise<T> {
 		const { params, ...fetchOptions } = options;
 
@@ -23,6 +23,9 @@ export function createApiClient(tenantId: string) {
 		const headers = new Headers(fetchOptions.headers);
 		headers.set('X-Tenant-Id', tenantId);
 		headers.set('Accept', 'application/json');
+		if (accessToken) {
+			headers.set('Authorization', `Bearer ${accessToken}`);
+		}
 		if (fetchOptions.body && !headers.has('Content-Type')) {
 			headers.set('Content-Type', 'application/json');
 		}

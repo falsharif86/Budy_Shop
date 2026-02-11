@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { page } from '$app/state';
 	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { productStore } from '$lib/stores/products.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import budyLogo from '$lib/assets/budy_logo.svg';
 	const tenantCtx = getTenantContext();
+
+	const user = $derived(page.data.user);
 
 	let inputValue = $state('');
 	let debounceTimer: ReturnType<typeof setTimeout>;
@@ -111,6 +114,29 @@
 				{/if}
 			</button>
 		</div>
+
+		<!-- User avatar / Sign in (animates out when search expands) -->
+		<div class="avatar-wrap" class:collapsed={expanded}>
+			{#if user}
+				<button
+					class="header-avatar"
+					onclick={() => ui.toggleNavDrawer()}
+					aria-label="User menu"
+				>
+					<span class="header-avatar-initial">{user.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
+				</button>
+			{:else}
+				<a
+					class="header-sign-in"
+					href="/auth/login"
+					aria-label="Sign in"
+				>
+					<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+						<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+					</svg>
+				</a>
+			{/if}
+		</div>
 	</div>
 </header>
 
@@ -200,6 +226,65 @@
 		opacity: 1;
 		pointer-events: auto;
 		transition: opacity 200ms 120ms ease;
+	}
+
+	/* --- Avatar wrapper --- */
+	.avatar-wrap {
+		width: 40px;
+		opacity: 1;
+		overflow: hidden;
+		flex-shrink: 0;
+		margin-left: 2px;
+		transition:
+			width 300ms cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 200ms ease,
+			margin 300ms cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.avatar-wrap.collapsed {
+		width: 0;
+		opacity: 0;
+		margin-left: 0;
+		pointer-events: none;
+	}
+
+	.header-avatar {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 50%;
+		background: var(--md-sys-color-primary);
+		border: none;
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: opacity 150ms ease;
+	}
+
+	.header-avatar:hover {
+		opacity: 0.85;
+	}
+
+	.header-avatar-initial {
+		font: var(--md-sys-typescale-label-medium);
+		color: var(--md-sys-color-on-primary);
+		line-height: 1;
+	}
+
+	.header-sign-in {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 50%;
+		color: var(--md-sys-color-on-surface-variant);
+		transition: background-color 150ms ease;
+	}
+
+	.header-sign-in:hover {
+		background: var(--md-sys-color-surface-container);
 	}
 
 	/* --- Bottom fade-out into transparency --- */
