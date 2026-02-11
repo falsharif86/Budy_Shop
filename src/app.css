@@ -78,15 +78,13 @@ html {
 	font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	height: 100dvh;
-	overflow: hidden;
+	min-height: 100dvh;
 }
 
 body {
 	background: radial-gradient(ellipse at top left, var(--md-sys-color-surface), var(--md-sys-color-surface-container-low));
 	color: var(--md-sys-color-on-surface);
-	height: 100dvh;
-	overflow: hidden;
+	min-height: 100dvh;
 }
 
 /* Scrollbar hiding for horizontal scroll areas */

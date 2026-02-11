@@ -19,17 +19,11 @@
 	let displayProducts = $derived(
 		productStore.allProducts.length > 0 ? productStore.products : data.products
 	);
-
-	function handleScroll(e: Event) {
-		const target = e.target as HTMLElement;
-		scrollY = target.scrollTop;
-	}
 </script>
 
-<div
-	class="flex h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto pb-24"
-	onscroll={handleScroll}
->
+<svelte:window bind:scrollY={scrollY} />
+
+<div class="flex flex-col pb-24">
 	<!-- Parallax-fading category bar -->
 	<ScrollAwareCategoryBar categories={productStore.categories.length > 0 ? productStore.categories : data.categories} {scrollY} />
 
