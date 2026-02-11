@@ -2,6 +2,8 @@
 	import '../app.css';
 	import ShopShell from '$lib/components/layout/ShopShell.svelte';
 	import { initTenantContext } from '$lib/stores/tenant.svelte.js';
+	import { cart } from '$lib/stores/cart.svelte.js';
+	import { orderStore } from '$lib/stores/orders.svelte.js';
 	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
 	import { fade } from 'svelte/transition';
 
@@ -11,6 +13,13 @@
 
 	$effect(() => {
 		tenantCtx.set(data.tenant);
+	});
+
+	$effect(() => {
+		if (data.tenant) {
+			cart.initPersistence(data.tenant.id);
+			orderStore.initPersistence(data.tenant.id);
+		}
 	});
 
 	const tenant = $derived(data.tenant);

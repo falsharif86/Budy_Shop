@@ -5,10 +5,46 @@ import { getCartItemId, getCartItemPrice } from '$lib/types/cart.js';
 function createCartStore() {
 	let items = $state<CartItem[]>([]);
 	let lastAction = $state<'add' | 'remove' | null>(null);
+	let _tenantId: string | null = null;
 
 	const totalItems = $derived(items.reduce((sum, item) => sum + item.quantity, 0));
 	const totalPrice = $derived(items.reduce((sum, item) => sum + getCartItemPrice(item) * item.quantity, 0));
 	const isEmpty = $derived(items.length === 0);
+
+	function _storageKey(): string | null {
+		return _tenantId ? `budy_cart_${_tenantId}` : null;
+	}
+
+	function _saveToStorage() {
+		if (typeof window === 'undefined') return;
+		const key = _storageKey();
+		if (!key) return;
+		try {
+			localStorage.setItem(key, JSON.stringify(items));
+		} catch {
+			// Storage full or unavailable
+		}
+	}
+
+	function _loadFromStorage() {
+		if (typeof window === 'undefined') return;
+		const key = _storageKey();
+		if (!key) return;
+		try {
+			const raw = localStorage.getItem(key);
+			if (raw) {
+				items = JSON.parse(raw);
+			}
+		} catch {
+			// Corrupted data, start fresh
+			items = [];
+		}
+	}
+
+	function initPersistence(tenantId: string) {
+		_tenantId = tenantId;
+		_loadFromStorage();
+	}
 
 	function addItem(product: Product, variant: ProductVariant | null = null, quantity = 1) {
 		const newItem: CartItem = { product, variant, quantity: 0 };
@@ -22,12 +58,14 @@ function createCartStore() {
 			items = [...items, { product, variant, quantity }];
 		}
 		lastAction = 'add';
+		_saveToStorage();
 	}
 
 	function removeItem(productId: string, variantId: string | null = null) {
 		const targetId = variantId ? `${productId}:${variantId}` : productId;
 		items = items.filter((i) => getCartItemId(i) !== targetId);
 		lastAction = 'remove';
+		_saveToStorage();
 	}
 
 	function updateQuantity(productId: string, variantId: string | null, quantity: number) {
@@ -41,11 +79,13 @@ function createCartStore() {
 			item.quantity = quantity;
 			items = [...items];
 		}
+		_saveToStorage();
 	}
 
 	function clear() {
 		items = [];
 		lastAction = null;
+		_saveToStorage();
 	}
 
 	return {
@@ -67,7 +107,8 @@ function createCartStore() {
 		addItem,
 		removeItem,
 		updateQuantity,
-		clear
+		clear,
+		initPersistence
 	};
 }
 

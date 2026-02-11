@@ -1,22 +1,76 @@
 <script lang="ts">
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
+	import { orderStore } from '$lib/stores/orders.svelte.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import { getCartItemPrice, getCartItemName, getCartItemId } from '$lib/types/cart.js';
+	import type { OnlineOrderDetail } from '$lib/types/order.js';
 	import { IconChevronLeft, IconClose, IconStore, IconDelivery, IconCheck } from '$lib/components/icons/index.js';
 
 	const subtotal = $derived(cart.totalPrice);
 	const taxRate = 0;
 	const taxAmount = $derived(subtotal * taxRate);
 	const total = $derived(subtotal + taxAmount);
-	const canPlaceOrder = $derived(ui.selectedDeliveryOption === 'pickup');
+
+	let customerPhone = $state('');
+	let customerName = $state('');
+	let customerNotes = $state('');
+	let submitting = $state(false);
+	let errorMessage = $state<string | null>(null);
+
+	const phoneDigits = $derived(customerPhone.replace(/\D/g, ''));
+	const phoneValid = $derived(phoneDigits.length >= 7);
+	const isPickup = $derived(ui.selectedDeliveryOption === 'pickup');
+	const canPlaceOrder = $derived(isPickup && phoneValid && !submitting);
 
 	async function handlePlaceOrder() {
 		if (!canPlaceOrder) return;
+		errorMessage = null;
+		submitting = true;
 		ui.startProcessing();
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-		cart.clear();
-		ui.showSuccess();
+
+		try {
+			const body = {
+				items: cart.items.map((item) => ({
+					productId: item.product.id,
+					variantId: item.variant?.id ?? null,
+					quantity: item.quantity,
+					unitPrice: getCartItemPrice(item)
+				})),
+				fulfillmentType: 0,
+				customerName: customerName.trim() || null,
+				customerPhone: customerPhone.trim(),
+				customerNotes: customerNotes.trim() || null
+			};
+
+			const res = await fetch('/api/orders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body)
+			});
+
+			if (!res.ok) {
+				const data = await res.json().catch(() => null);
+				throw new Error(data?.error ?? `Order failed (${res.status})`);
+			}
+
+			const detail: OnlineOrderDetail = await res.json();
+			orderStore.addOrder(detail);
+			cart.clear();
+			customerPhone = '';
+			customerName = '';
+			customerNotes = '';
+			ui.showSuccess();
+		} catch (err) {
+			errorMessage = err instanceof Error ? err.message : 'Failed to place order. Please try again.';
+			ui.startCheckout();
+		} finally {
+			submitting = false;
+		}
+	}
+
+	function dismissError() {
+		errorMessage = null;
 	}
 </script>
 
@@ -42,6 +96,16 @@
 
 	<!-- Scrollable content -->
 	<div class="checkout-scroll">
+		<!-- Error banner -->
+		{#if errorMessage}
+			<div class="error-banner">
+				<span class="error-banner__text">{errorMessage}</span>
+				<button class="error-banner__dismiss" onclick={dismissError} aria-label="Dismiss error">
+					<IconClose class="error-banner__dismiss-icon" />
+				</button>
+			</div>
+		{/if}
+
 		<!-- Order summary -->
 		<div class="checkout-section">
 			<h3 class="checkout-section__title">Order Summary</h3>
@@ -108,6 +172,56 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Contact information (visible when pickup selected) -->
+		{#if isPickup}
+			<div class="checkout-section contact-section">
+				<h3 class="checkout-section__title">
+					<svg class="checkout-section__title-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+						<path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+					</svg>
+					Contact Information
+				</h3>
+				<div class="contact-fields">
+					<div class="field">
+						<label class="field__label" for="checkout-phone">
+							Phone number <span class="field__required">*</span>
+						</label>
+						<input
+							id="checkout-phone"
+							class="field__input"
+							class:field__input--error={customerPhone.length > 0 && !phoneValid}
+							type="tel"
+							placeholder="+31 6 1234 5678"
+							bind:value={customerPhone}
+						/>
+						{#if customerPhone.length > 0 && !phoneValid}
+							<span class="field__hint field__hint--error">At least 7 digits required</span>
+						{/if}
+					</div>
+					<div class="field">
+						<label class="field__label" for="checkout-name">Name <span class="field__optional">(optional)</span></label>
+						<input
+							id="checkout-name"
+							class="field__input"
+							type="text"
+							placeholder="Your name"
+							bind:value={customerName}
+						/>
+					</div>
+					<div class="field">
+						<label class="field__label" for="checkout-notes">Notes <span class="field__optional">(optional)</span></label>
+						<textarea
+							id="checkout-notes"
+							class="field__textarea"
+							placeholder="Special requests..."
+							rows="2"
+							bind:value={customerNotes}
+						></textarea>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Footer -->
@@ -125,7 +239,11 @@
 				disabled={!canPlaceOrder}
 				onclick={handlePlaceOrder}
 			>
-				Place Order
+				{#if submitting}
+					Placing...
+				{:else}
+					Place Order
+				{/if}
 			</button>
 		</div>
 	</div>
@@ -197,6 +315,44 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: 16px;
+	}
+
+	/* --- Error banner --- */
+	.error-banner {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 16px;
+		margin-bottom: 16px;
+		border-radius: 12px;
+		background: var(--md-sys-color-error-container);
+		color: var(--md-sys-color-on-error-container);
+	}
+
+	.error-banner__text {
+		flex: 1;
+		font-size: 0.8125rem;
+		font-weight: 500;
+	}
+
+	.error-banner__dismiss {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 9999px;
+		flex-shrink: 0;
+		transition: background-color 0.15s ease;
+	}
+
+	.error-banner__dismiss:hover {
+		background: color-mix(in srgb, var(--md-sys-color-on-error-container) 10%, transparent);
+	}
+
+	:global(.error-banner__dismiss-icon) {
+		width: 16px;
+		height: 16px;
 	}
 
 	/* --- Sections --- */
@@ -390,6 +546,88 @@
 		color: var(--md-sys-color-on-surface-variant);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
+	}
+
+	/* --- Contact fields --- */
+	.contact-section {
+		animation: slide-in 200ms ease-out;
+	}
+
+	@keyframes slide-in {
+		from {
+			opacity: 0;
+			transform: translateY(-8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.contact-fields {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+
+	.field__label {
+		display: block;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: var(--md-sys-color-on-surface-variant);
+		margin-bottom: 6px;
+	}
+
+	.field__required {
+		color: var(--md-sys-color-error);
+	}
+
+	.field__optional {
+		font-weight: 400;
+		color: var(--md-sys-color-outline);
+	}
+
+	.field__input,
+	.field__textarea {
+		width: 100%;
+		padding: 10px 14px;
+		border-radius: 10px;
+		border: 1.5px solid var(--md-sys-color-outline-variant);
+		background: var(--md-sys-color-surface-container);
+		color: var(--md-sys-color-on-surface);
+		font-size: 0.875rem;
+		font-family: inherit;
+		transition: border-color 150ms ease;
+		box-sizing: border-box;
+	}
+
+	.field__input:focus,
+	.field__textarea:focus {
+		outline: none;
+		border-color: var(--md-sys-color-primary);
+	}
+
+	.field__input--error {
+		border-color: var(--md-sys-color-error);
+	}
+
+	.field__input--error:focus {
+		border-color: var(--md-sys-color-error);
+	}
+
+	.field__textarea {
+		resize: vertical;
+		min-height: 60px;
+	}
+
+	.field__hint {
+		display: block;
+		font-size: 0.75rem;
+		margin-top: 4px;
+	}
+
+	.field__hint--error {
+		color: var(--md-sys-color-error);
 	}
 
 	/* --- Footer --- */
