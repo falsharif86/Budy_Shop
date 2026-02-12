@@ -1,4 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
+import { randomUUID } from 'crypto';
 
 export interface SessionData {
 	accessToken: string;
@@ -14,9 +15,17 @@ export interface SessionData {
 
 const COOKIE_NAME = 'budy_shop_session';
 
+// Server-side session store (cookie holds only a UUID session ID)
+const sessions = new Map<string, SessionData>();
+
 export function setSession(cookies: Cookies, data: SessionData): void {
-	const encoded = btoa(JSON.stringify(data));
-	cookies.set(COOKIE_NAME, encoded, {
+	// Clear any previous session for this cookie
+	const oldId = cookies.get(COOKIE_NAME);
+	if (oldId) sessions.delete(oldId);
+
+	const sessionId = randomUUID();
+	sessions.set(sessionId, data);
+	cookies.set(COOKIE_NAME, sessionId, {
 		path: '/',
 		httpOnly: true,
 		secure: true,
@@ -26,22 +35,21 @@ export function setSession(cookies: Cookies, data: SessionData): void {
 }
 
 export function getSession(cookies: Cookies): SessionData | null {
-	const cookie = cookies.get(COOKIE_NAME);
-	if (!cookie) return null;
+	const sessionId = cookies.get(COOKIE_NAME);
+	if (!sessionId) return null;
 
-	try {
-		const data = JSON.parse(atob(cookie)) as SessionData;
-		// Check if expired
-		if (data.expiresAt && Date.now() / 1000 > data.expiresAt) {
-			clearSession(cookies);
-			return null;
-		}
-		return data;
-	} catch {
+	const data = sessions.get(sessionId);
+	if (!data) return null;
+
+	if (data.expiresAt && Date.now() / 1000 > data.expiresAt) {
+		clearSession(cookies);
 		return null;
 	}
+	return data;
 }
 
 export function clearSession(cookies: Cookies): void {
+	const sessionId = cookies.get(COOKIE_NAME);
+	if (sessionId) sessions.delete(sessionId);
 	cookies.delete(COOKIE_NAME, { path: '/' });
 }
