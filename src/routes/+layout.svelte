@@ -6,6 +6,8 @@
 	import { orderStore } from '$lib/stores/orders.svelte.js';
 	import { addressStore } from '$lib/stores/addresses.svelte.js';
 	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
+	import InstallPrompt from '$lib/components/shared/InstallPrompt.svelte';
+	import { pwa } from '$lib/stores/pwa.svelte.js';
 	import { fade } from 'svelte/transition';
 
 	let { data, children } = $props();
@@ -34,6 +36,17 @@
 
 	const tenant = $derived(data.tenant);
 
+	$effect(() => {
+		const onPrompt = (e: Event) => pwa.capturePrompt(e as BeforeInstallPromptEvent);
+		const onInstalled = () => pwa.markInstalled();
+		window.addEventListener('beforeinstallprompt', onPrompt);
+		window.addEventListener('appinstalled', onInstalled);
+		return () => {
+			window.removeEventListener('beforeinstallprompt', onPrompt);
+			window.removeEventListener('appinstalled', onInstalled);
+		};
+	});
+
 	let showSplash = $state(true);
 
 	function handleSplashComplete() {
@@ -46,6 +59,7 @@
 <svelte:head>
 	<title>{tenant?.name ?? 'Shop'} | Budy</title>
 	<meta name="description" content="{tenant?.name ?? 'Shop'} - Browse products and order online" />
+	<link rel="manifest" href="/manifest.webmanifest" />
 </svelte:head>
 
 {#if showSplash && tenant}
@@ -68,6 +82,7 @@
 	<ShopShell>
 		{@render children()}
 	</ShopShell>
+	<InstallPrompt />
 {:else}
 	<div class="flex min-h-dvh flex-col items-center justify-center gap-4 p-8 text-center">
 		<div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--md-sys-color-surface-container)]">

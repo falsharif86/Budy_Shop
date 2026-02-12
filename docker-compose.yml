@@ -16,6 +16,7 @@ services:
       - HOST=0.0.0.0
       - MONGODB_URI=mongodb://host.docker.internal:27017
       - VITE_API_BASE_URL=https://api.budy.app
+      - GOOGLE_SHOP_CLIENT_ID=965460910136-49elopo92dldhf3tvgqtmfct0ldce6i6.apps.googleusercontent.com
     networks:
       - budy-network
     deploy:
