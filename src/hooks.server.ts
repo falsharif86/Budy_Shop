@@ -32,6 +32,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				id: session.userId,
 				email: session.email,
 				name: session.name,
+				picture: session.picture,
 				accessToken: session.accessToken,
 				roles: session.roles
 			}

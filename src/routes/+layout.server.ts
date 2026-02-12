@@ -10,6 +10,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 					id: locals.user.id,
 					email: locals.user.email,
 					name: locals.user.name,
+					picture: locals.user.picture,
 					roles: locals.user.roles
 				}
 			: null

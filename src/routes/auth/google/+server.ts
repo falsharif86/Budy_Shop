@@ -79,6 +79,7 @@ export async function POST({ request, locals, cookies }: RequestEvent) {
 		const roles: string[] = Array.isArray(roleClaim)
 			? roleClaim.map((r) => String(r))
 			: [String(roleClaim)];
+		const picture = claims.picture ? String(claims.picture) : undefined;
 
 		setSession(cookies, {
 			accessToken,
@@ -86,12 +87,13 @@ export async function POST({ request, locals, cookies }: RequestEvent) {
 			userId,
 			email,
 			name,
+			picture,
 			roles,
 			tenantId: locals.tenant.id,
 			expiresAt: Math.floor(Date.now() / 1000) + expiresIn
 		});
 
-		return json({ success: true, user: { id: userId, email, name, roles } });
+		return json({ success: true, user: { id: userId, email, name, picture, roles } });
 	} catch (err) {
 		console.error('Google sign-in error:', err);
 		return json(

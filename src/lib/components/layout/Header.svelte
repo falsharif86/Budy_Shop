@@ -123,7 +123,16 @@
 					onclick={() => ui.toggleNavDrawer()}
 					aria-label="User menu"
 				>
-					<span class="header-avatar-initial">{user.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
+					{#if user.picture}
+						<img
+							src={user.picture}
+							alt={user.name ?? 'User'}
+							class="header-avatar-img"
+							referrerpolicy="no-referrer"
+						/>
+					{:else}
+						<span class="header-avatar-initial">{user.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
+					{/if}
 				</button>
 			{:else}
 				<a
@@ -264,6 +273,13 @@
 
 	.header-avatar:hover {
 		opacity: 0.85;
+	}
+
+	.header-avatar-img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
 	}
 
 	.header-avatar-initial {

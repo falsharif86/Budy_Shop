@@ -6,6 +6,7 @@ export interface SessionData {
 	userId: string;
 	email: string;
 	name: string;
+	picture?: string;
 	roles: string[];
 	tenantId: string;
 	expiresAt: number; // Unix timestamp

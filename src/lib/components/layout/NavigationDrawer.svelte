@@ -129,7 +129,16 @@
 				<!-- User card -->
 				<div class="user-card">
 					<div class="user-avatar">
-						<span class="user-initial">{user.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
+						{#if user.picture}
+							<img
+								src={user.picture}
+								alt={user.name ?? 'User'}
+								class="user-avatar-img"
+								referrerpolicy="no-referrer"
+							/>
+						{:else}
+							<span class="user-initial">{user.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
+						{/if}
 					</div>
 					<div class="user-info">
 						<span class="user-name">{user.name}</span>
@@ -319,6 +328,13 @@
 		border-radius: 50%;
 		background: var(--md-sys-color-primary);
 		flex-shrink: 0;
+	}
+
+	.user-avatar-img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
 	}
 
 	.user-initial {

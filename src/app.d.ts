@@ -11,6 +11,7 @@ declare global {
 				id: string;
 				email: string;
 				name: string;
+				picture?: string;
 				accessToken: string;
 				roles: string[];
 			} | null;
@@ -24,6 +25,7 @@ declare global {
 				id: string;
 				email: string;
 				name: string;
+				picture?: string;
 				roles: string[];
 			} | null;
 		}
