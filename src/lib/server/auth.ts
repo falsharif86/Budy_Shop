@@ -1,5 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import { randomUUID } from 'crypto';
+
 
 export interface SessionData {
 	accessToken: string;
@@ -23,7 +23,7 @@ export function setSession(cookies: Cookies, data: SessionData): void {
 	const oldId = cookies.get(COOKIE_NAME);
 	if (oldId) sessions.delete(oldId);
 
-	const sessionId = randomUUID();
+	const sessionId = crypto.randomUUID();
 	sessions.set(sessionId, data);
 	cookies.set(COOKIE_NAME, sessionId, {
 		path: '/',
