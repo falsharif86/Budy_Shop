@@ -8,31 +8,28 @@ export async function POST({ request, locals, cookies }: RequestEvent) {
 		return json({ success: false, error: 'Tenant not found' }, { status: 404 });
 	}
 
-	let body: { idToken?: string };
+	let body: { verificationId?: string; pin?: string };
 	try {
 		body = await request.json();
 	} catch {
 		return json({ success: false, error: 'Invalid request body' }, { status: 400 });
 	}
 
-	const { idToken } = body;
-	if (!idToken) {
-		return json({ success: false, error: 'Missing idToken' }, { status: 400 });
+	const { verificationId, pin } = body;
+	if (!verificationId || !pin) {
+		return json({ success: false, error: 'Missing verification ID or PIN' }, { status: 400 });
 	}
 
 	const apiBaseUrl = env.VITE_API_BASE_URL ?? 'https://api.budy.app';
 
 	try {
-		// Exchange Google ID token with backend for access token
 		const tokenResponse = await fetch(`${apiBaseUrl}/connect/token`, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: new URLSearchParams({
-				grant_type: 'google_id_token',
-				id_token: idToken,
-				client_type: 'shop',
+				grant_type: 'phone_pin',
+				verification_id: verificationId,
+				pin,
 				client_id: 'Budy_Shop',
 				tenant_name: locals.tenant.name,
 				scope: 'offline_access Budy'
@@ -40,12 +37,10 @@ export async function POST({ request, locals, cookies }: RequestEvent) {
 		});
 
 		if (!tokenResponse.ok) {
-			const errorText = await tokenResponse.text();
-			console.error('Token exchange failed:', tokenResponse.status, errorText);
-			return json(
-				{ success: false, error: 'Authentication failed. Please try again.' },
-				{ status: 401 }
-			);
+			const errorData = await tokenResponse.json().catch(() => null);
+			const errorDesc =
+				errorData?.error_description ?? 'Verification failed. Please try again.';
+			return json({ success: false, error: errorDesc }, { status: 401 });
 		}
 
 		const tokenData = await tokenResponse.json();
@@ -60,18 +55,20 @@ export async function POST({ request, locals, cookies }: RequestEvent) {
 
 		setSession(cookies, session);
 
+		const isNewUser = /^\+?\d{8,15}$/.test(session.name);
+
 		return json({
 			success: true,
+			redirectTo: isNewUser ? '/auth/setup-profile' : '/',
 			user: {
 				id: session.userId,
 				email: session.email,
 				name: session.name,
-				picture: session.picture,
 				roles: session.roles
 			}
 		});
 	} catch (err) {
-		console.error('Google sign-in error:', err);
+		console.error('Phone verify error:', err);
 		return json(
 			{ success: false, error: 'An unexpected error occurred. Please try again.' },
 			{ status: 500 }

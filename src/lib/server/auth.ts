@@ -53,3 +53,20 @@ export function clearSession(cookies: Cookies): void {
 	if (sessionId) sessions.delete(sessionId);
 	cookies.delete(COOKIE_NAME, { path: '/' });
 }
+
+export function updateSession(
+	cookies: Cookies,
+	updates: Partial<Pick<SessionData, 'name' | 'picture' | 'email'>>
+): boolean {
+	const sessionId = cookies.get(COOKIE_NAME);
+	if (!sessionId) return false;
+
+	const data = sessions.get(sessionId);
+	if (!data) return false;
+
+	if (updates.name !== undefined) data.name = updates.name;
+	if (updates.picture !== undefined) data.picture = updates.picture;
+	if (updates.email !== undefined) data.email = updates.email;
+
+	return true;
+}

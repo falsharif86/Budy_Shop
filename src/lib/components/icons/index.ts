@@ -10,3 +10,4 @@ export { default as IconTrash } from './IconTrash.svelte';
 export { default as IconStore } from './IconStore.svelte';
 export { default as IconDelivery } from './IconDelivery.svelte';
 export { default as IconCheck } from './IconCheck.svelte';
+export { default as IconMapPin } from './IconMapPin.svelte';
