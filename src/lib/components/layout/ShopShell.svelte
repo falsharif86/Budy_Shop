@@ -6,13 +6,24 @@
 	import ProductDetails from '$lib/components/product/ProductDetails.svelte';
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import MyAddressesView from '$lib/components/address/MyAddressesView.svelte';
+	import LoginSheet from '$lib/components/auth/LoginSheet.svelte';
 	import { ui } from '$lib/stores/ui.svelte.js';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	interface Props {
 		children: import('svelte').Snippet;
 	}
 
 	let { children }: Props = $props();
+
+	// Auto-open login sheet from ?login query param (e.g. redirect from /auth/login)
+	$effect(() => {
+		if (page.url.searchParams.has('login')) {
+			ui.openLoginSheet();
+			goto(page.url.pathname, { replaceState: true });
+		}
+	});
 </script>
 
 <!-- Navigation Drawer (outside shifted container so the fixed pane isn't offset) -->
@@ -41,6 +52,11 @@
 		<Drawer open={true} side="right" onclose={() => ui.closeAddressDrawer()}>
 			<MyAddressesView />
 		</Drawer>
+	{/if}
+
+	<!-- Login Sheet -->
+	{#if ui.loginSheetOpen}
+		<LoginSheet tenantName={page.data.tenant?.name ?? 'Shop'} />
 	{/if}
 </div>
 

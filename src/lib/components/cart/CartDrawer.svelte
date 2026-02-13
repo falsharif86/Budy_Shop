@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import CartItemComponent from './CartItem.svelte';
 	import CheckoutView from './CheckoutView.svelte';
@@ -19,7 +18,7 @@
 	function handleCheckout() {
 		if (!page.data.user) {
 			ui.closeCartDrawer();
-			goto('/auth/login');
+			ui.openLoginSheet();
 			return;
 		}
 		ui.startCheckout();

@@ -11,3 +11,5 @@ export { default as IconStore } from './IconStore.svelte';
 export { default as IconDelivery } from './IconDelivery.svelte';
 export { default as IconCheck } from './IconCheck.svelte';
 export { default as IconMapPin } from './IconMapPin.svelte';
+export { default as IconBackspace } from './IconBackspace.svelte';
+export { default as IconSend } from './IconSend.svelte';

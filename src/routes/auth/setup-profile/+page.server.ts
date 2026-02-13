@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
-		throw redirect(303, '/auth/login');
+		throw redirect(303, '/?login');
 	}
 
 	// If name doesn't match phone pattern, profile is already set up

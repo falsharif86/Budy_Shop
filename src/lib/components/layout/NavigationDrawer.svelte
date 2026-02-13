@@ -48,7 +48,7 @@
 
 	function handleSignIn() {
 		ui.closeNavDrawer();
-		window.location.href = '/auth/login';
+		ui.openLoginSheet();
 	}
 
 	async function handleSignOut() {
