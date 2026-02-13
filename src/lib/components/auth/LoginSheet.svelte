@@ -4,7 +4,8 @@
 	import { cubicOut } from 'svelte/easing';
 	import budyLogo from '$lib/assets/budy_logo.svg';
 	import { IconCheck } from '$lib/components/icons/index.js';
-	import CountryCodeSelector, { type Country } from '$lib/components/shared/CountryCodeSelector.svelte';
+	import CountryCodeSelector from '$lib/components/shared/CountryCodeSelector.svelte';
+	import { DEFAULT_COUNTRY, type Country } from '$lib/data/countries.js';
 	import Numpad from '$lib/components/shared/Numpad.svelte';
 	import { ui } from '$lib/stores/ui.svelte.js';
 
@@ -22,7 +23,7 @@
 
 	// Phone auth state
 	let localNumber = $state('');
-	let selectedCountry = $state<Country>({ code: 'TH', dial: '66', name: 'Thailand' });
+	let selectedCountry = $state<Country>(DEFAULT_COUNTRY);
 	let pin = $state(['', '', '', '']);
 	let verificationId = $state('');
 	let countdown = $state(0);

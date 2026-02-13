@@ -4,6 +4,7 @@
 	import { formatPriceCompact } from '$lib/utils/currency.js';
 	import { isInStock, getEffectivePrice } from '$lib/types/product.js';
 	import ProductImage from '$lib/components/shared/ProductImage.svelte';
+	import { IconPlus, IconMinus } from '$lib/components/icons/index.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import { cart } from '$lib/stores/cart.svelte.js';
 
@@ -18,6 +19,9 @@
 	const imageUrl = $derived(getProductImageUrl(product));
 	const price = $derived(getEffectivePrice(product));
 	const inStock = $derived(isInStock(product));
+	const defaultVariant = $derived(product.variants.find((v) => v.isDefault && v.isActive) ?? null);
+	const variantId = $derived(defaultVariant?.id ?? null);
+	const cartQuantity = $derived(cart.getItemQuantity(product.id, variantId));
 
 	function handleClick() {
 		ui.openProductDrawer(product);
@@ -26,8 +30,17 @@
 	function handleAddToCart(e: MouseEvent) {
 		e.stopPropagation();
 		if (!inStock) return;
-		const defaultVariant = product.variants.find((v) => v.isDefault && v.isActive) ?? null;
 		cart.addItem(product, defaultVariant);
+	}
+
+	function handleIncrement(e: MouseEvent) {
+		e.stopPropagation();
+		cart.updateQuantity(product.id, variantId, cartQuantity + 1);
+	}
+
+	function handleDecrement(e: MouseEvent) {
+		e.stopPropagation();
+		cart.updateQuantity(product.id, variantId, cartQuantity - 1);
 	}
 </script>
 
@@ -73,15 +86,35 @@
 				{formatPriceCompact(price)}
 			</span>
 
-			<!-- Add button -->
+			<!-- Add / Quantity control -->
 			{#if inStock}
-				<button
-					class="product-card__add-btn"
-					onclick={handleAddToCart}
-					aria-label="Add {name} to cart"
-				>
-					Add
-				</button>
+				{#if cartQuantity > 0}
+					<div class="product-card__qty-bar">
+						<button
+							class="product-card__qty-btn product-card__qty-btn--minus"
+							onclick={handleDecrement}
+							aria-label="Decrease quantity of {name}"
+						>
+							<IconMinus class="product-card__qty-icon" />
+						</button>
+						<span class="product-card__qty-value">{cartQuantity}</span>
+						<button
+							class="product-card__qty-btn product-card__qty-btn--plus"
+							onclick={handleIncrement}
+							aria-label="Increase quantity of {name}"
+						>
+							<IconPlus class="product-card__qty-icon" />
+						</button>
+					</div>
+				{:else}
+					<button
+						class="product-card__add-btn"
+						onclick={handleAddToCart}
+						aria-label="Add {name} to cart"
+					>
+						Add
+					</button>
+				{/if}
 			{/if}
 		</div>
 	</div>
@@ -211,5 +244,71 @@
 
 	.product-card__add-btn:active {
 		transform: scale(0.95);
+	}
+
+	/* Quantity bar (replaces Add button when item is in cart) */
+	.product-card__qty-bar {
+		margin-top: auto;
+		width: 120px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		border-radius: 20px;
+		background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+		overflow: hidden;
+	}
+
+	.product-card__qty-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		flex-shrink: 0;
+		border-radius: 50%;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+	}
+
+	.product-card__qty-btn:active {
+		transform: scale(0.9);
+	}
+
+	.product-card__qty-btn--minus {
+		background: transparent;
+	}
+
+	.product-card__qty-btn--minus:hover {
+		background: color-mix(in srgb, var(--md-sys-color-error) 15%, transparent);
+	}
+
+	.product-card__qty-btn--plus {
+		background: var(--md-sys-color-primary);
+	}
+
+	.product-card__qty-btn--plus:hover {
+		background: color-mix(in srgb, var(--md-sys-color-primary) 85%, black);
+	}
+
+	:global(.product-card__qty-icon) {
+		width: 14px;
+		height: 14px;
+	}
+
+	.product-card__qty-btn--minus :global(.product-card__qty-icon) {
+		color: var(--md-sys-color-on-surface);
+	}
+
+	.product-card__qty-btn--plus :global(.product-card__qty-icon) {
+		color: var(--md-sys-color-on-primary);
+	}
+
+	.product-card__qty-value {
+		flex: 1;
+		text-align: center;
+		font-size: 14px;
+		font-weight: 700;
+		color: var(--md-sys-color-primary);
+		user-select: none;
 	}
 </style>

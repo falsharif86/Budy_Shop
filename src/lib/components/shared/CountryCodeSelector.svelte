@@ -1,24 +1,8 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
+	import { COUNTRIES, type Country } from '$lib/data/countries.js';
 
-	export interface Country {
-		code: string;
-		dial: string;
-		name: string;
-	}
-
-	const COUNTRIES: Country[] = [
-		{ code: 'TH', dial: '66', name: 'Thailand' },
-		{ code: 'NL', dial: '31', name: 'Netherlands' },
-		{ code: 'US', dial: '1', name: 'United States' },
-		{ code: 'GB', dial: '44', name: 'United Kingdom' },
-		{ code: 'DE', dial: '49', name: 'Germany' }
-	];
-
-	/** Returns a flagcdn.com SVG URL for the given 2-letter country code */
-	function flagUrl(code: string): string {
-		return `https://flagcdn.com/${code.toLowerCase()}.svg`;
-	}
+	export type { Country };
 
 	interface Props {
 		selected: Country;
@@ -28,24 +12,45 @@
 
 	let { selected, onselect, disabled = false }: Props = $props();
 	let open = $state(false);
+	let search = $state('');
+	let searchInput: HTMLInputElement | undefined = $state();
+
+	const filtered = $derived.by(() => {
+		if (!search) return COUNTRIES;
+		const q = search.toLowerCase();
+		return COUNTRIES.filter(
+			(c) => c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q)
+		);
+	});
 
 	function toggle() {
-		if (!disabled) open = !open;
+		if (disabled) return;
+		open = !open;
+		if (open) {
+			search = '';
+			setTimeout(() => searchInput?.focus(), 50);
+		}
 	}
 
 	function select(country: Country) {
 		onselect(country);
 		open = false;
+		search = '';
 	}
 
 	function close() {
 		open = false;
+		search = '';
+	}
+
+	function handleSearchKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') close();
 	}
 </script>
 
 <div class="country-selector">
 	<button class="country-pill" onclick={toggle} {disabled} aria-expanded={open} aria-haspopup="listbox">
-		<img class="country-flag" src={flagUrl(selected.code)} alt="{selected.code} flag" />
+		<span class="fi fi-{selected.code.toLowerCase()} fis country-flag"></span>
 		<span class="country-dial">+{selected.dial}</span>
 		<svg class="country-chevron" class:open width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 			<path d="M6 9l6 6 6-6" />
@@ -55,17 +60,32 @@
 	{#if open}
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="country-backdrop" onclick={close} onkeydown={close}></div>
-		<ul class="country-dropdown" role="listbox" transition:fly={{ y: -8, duration: 200 }}>
-			{#each COUNTRIES as country (country.code)}
-				<li role="option" aria-selected={country.code === selected.code}>
-					<button class="country-option" class:active={country.code === selected.code} onclick={() => select(country)}>
-						<img class="country-flag" src={flagUrl(country.code)} alt="{country.code} flag" />
-						<span class="country-name">{country.name}</span>
-						<span class="country-dial">+{country.dial}</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
+		<div class="country-dropdown" transition:fly={{ y: -8, duration: 200 }}>
+			<div class="country-search-wrap">
+				<input
+					bind:this={searchInput}
+					type="text"
+					class="country-search"
+					placeholder="Search countries..."
+					bind:value={search}
+					onkeydown={handleSearchKeydown}
+				/>
+			</div>
+			<ul class="country-list" role="listbox">
+				{#each filtered as country (country.code)}
+					<li role="option" aria-selected={country.code === selected.code}>
+						<button class="country-option" class:active={country.code === selected.code} onclick={() => select(country)}>
+							<span class="fi fi-{country.code.toLowerCase()} fis country-flag"></span>
+							<span class="country-name">{country.name}</span>
+							<span class="country-dial">+{country.dial}</span>
+						</button>
+					</li>
+				{/each}
+				{#if filtered.length === 0}
+					<li class="country-empty">No countries found</li>
+				{/if}
+			</ul>
+		</div>
 	{/if}
 </div>
 
@@ -101,7 +121,6 @@
 	.country-flag {
 		width: 1.5rem;
 		height: 1.125rem;
-		object-fit: cover;
 		border-radius: 2px;
 		flex-shrink: 0;
 	}
@@ -127,14 +146,45 @@
 		top: calc(100% + 0.5rem);
 		left: 0;
 		z-index: 11;
-		min-width: 220px;
-		padding: 0.25rem 0;
-		margin: 0;
-		list-style: none;
+		min-width: 280px;
 		border-radius: var(--md-sys-shape-corner-medium);
 		background: var(--md-sys-color-surface-container-high);
 		box-shadow: var(--md-sys-elevation-3, 0 1px 3px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08));
 		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.country-search-wrap {
+		padding: 0.5rem;
+		border-bottom: 1px solid var(--md-sys-color-outline-variant);
+	}
+
+	.country-search {
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--md-sys-color-outline-variant);
+		border-radius: var(--md-sys-shape-corner-small, 8px);
+		background: var(--md-sys-color-surface);
+		color: var(--md-sys-color-on-surface);
+		font: var(--md-sys-typescale-body-medium);
+		outline: none;
+	}
+
+	.country-search:focus {
+		border-color: var(--md-sys-color-primary);
+	}
+
+	.country-search::placeholder {
+		color: var(--md-sys-color-outline);
+	}
+
+	.country-list {
+		max-height: 240px;
+		overflow-y: auto;
+		padding: 0.25rem 0;
+		margin: 0;
+		list-style: none;
 	}
 
 	.country-option {
@@ -171,6 +221,13 @@
 	}
 
 	.country-option .country-dial {
+		font: var(--md-sys-typescale-body-medium);
+	}
+
+	.country-empty {
+		padding: 1rem;
+		text-align: center;
+		color: var(--md-sys-color-outline);
 		font: var(--md-sys-typescale-body-medium);
 	}
 </style>

@@ -88,6 +88,12 @@ function createCartStore() {
 		_saveToStorage();
 	}
 
+	function getItemQuantity(productId: string, variantId: string | null = null): number {
+		const targetId = variantId ? `${productId}:${variantId}` : productId;
+		const item = items.find((i) => getCartItemId(i) === targetId);
+		return item?.quantity ?? 0;
+	}
+
 	return {
 		get items() {
 			return items;
@@ -107,6 +113,7 @@ function createCartStore() {
 		addItem,
 		removeItem,
 		updateQuantity,
+		getItemQuantity,
 		clear,
 		initPersistence
 	};
