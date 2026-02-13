@@ -10,7 +10,7 @@ export async function PUT({ request, params, locals }: RequestEvent) {
 
 	try {
 		const body = await request.json();
-		const result = await api.put(`/api/app/tenant-pos/member-address`, { id: params.id, ...body });
+		const result = await api.put(`/api/tenants/tenant-pos/member-address`, { id: params.id, ...body });
 		return json(result);
 	} catch (err) {
 		if (err instanceof ApiError) {
@@ -29,7 +29,7 @@ export async function DELETE({ params, locals }: RequestEvent) {
 	const api = createApiClient(locals.tenant.id, locals.user.accessToken);
 
 	try {
-		await api.del(`/api/app/tenant-pos/member-address/${params.id}`);
+		await api.del(`/api/tenants/tenant-pos/member-address/${params.id}`);
 		return json({ success: true });
 	} catch (err) {
 		if (err instanceof ApiError) {

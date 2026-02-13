@@ -9,7 +9,7 @@ export async function GET({ locals }: RequestEvent) {
 	const api = createApiClient(locals.tenant.id, locals.user.accessToken);
 
 	try {
-		const result = await api.get('/api/app/tenant-pos/member-addresses');
+		const result = await api.get('/api/tenants/tenant-pos/member-addresses');
 		return json(result);
 	} catch (err) {
 		if (err instanceof ApiError) {
@@ -29,7 +29,7 @@ export async function POST({ request, locals }: RequestEvent) {
 
 	try {
 		const body = await request.json();
-		const result = await api.post('/api/app/tenant-pos/member-address', body);
+		const result = await api.post('/api/tenants/tenant-pos/member-address', body);
 		return json(result);
 	} catch (err) {
 		if (err instanceof ApiError) {

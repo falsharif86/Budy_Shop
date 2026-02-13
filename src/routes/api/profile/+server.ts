@@ -9,7 +9,7 @@ export async function GET({ locals }: RequestEvent) {
 	const api = createApiClient(locals.tenant.id, locals.user.accessToken);
 
 	try {
-		const result = await api.get('/api/app/tenant-pos/member-profile');
+		const result = await api.get('/api/tenants/tenant-pos/member-profile');
 		return json(result);
 	} catch (err) {
 		if (err instanceof ApiError) {

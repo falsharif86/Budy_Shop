@@ -4,14 +4,16 @@
 	import type { MemberAddress, CreateAddressPayload, AddressLabel } from '$lib/types/address.js';
 	import {
 		loadGoogleMaps,
-		initAutocomplete,
+		fetchSuggestions,
+		fetchPlaceById,
 		initMap,
 		addDraggableMarker,
 		reverseGeocode,
 		panTo,
 		DEFAULT_CENTER,
 		DEFAULT_ZOOM,
-		type PlaceResult
+		type PlaceResult,
+		type Suggestion
 	} from '$lib/utils/google-maps.js';
 	import { IconChevronLeft, IconMapPin } from '$lib/components/icons/index.js';
 
@@ -49,6 +51,9 @@
 	let formattedAddress = $state('');
 
 	let searchInput = $state<HTMLInputElement | null>(null);
+	let searchQuery = $state('');
+	let suggestions = $state<Suggestion[]>([]);
+	let showSuggestions = $state(false);
 	let mapContainer = $state<HTMLElement | null>(null);
 	let mapsLoaded = $state(false);
 	let mapLoadError = $state(false);
@@ -56,9 +61,13 @@
 	let saving = $state(false);
 	let detailsOpen = $state(false);
 
+	// Country restriction for autocomplete (set by geolocation reverse geocode)
+	let detectedCountryCode = $state<string | undefined>(undefined);
+
 	// Map instances (not reactive)
 	let mapInstance: any = null;
 	let markerInstance: any = null;
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const hasLocation = $derived(latitude !== null && longitude !== null);
 	const canConfirm = $derived(hasLocation || formattedAddress.length > 0);
@@ -86,12 +95,6 @@
 	});
 
 	function initSearchMap() {
-		// Init autocomplete
-		const el = searchInput;
-		if (el) {
-			initAutocomplete(el, handlePlaceSelect);
-		}
-
 		// Init map
 		const container = mapContainer;
 		if (!container) return;
@@ -111,6 +114,7 @@
 					const lng = pos.coords.longitude;
 					panTo(mapInstance, lat, lng, markerInstance);
 					mapInstance.setZoom(17);
+					handleMarkerDrag(lat, lng);
 				},
 				() => {
 					// Ignore - keep Amsterdam default
@@ -118,6 +122,34 @@
 				{ timeout: 5000 }
 			);
 		}
+	}
+
+	function handleSearchInput() {
+		const query = searchQuery.trim();
+		if (query.length < 2) {
+			suggestions = [];
+			showSuggestions = false;
+			return;
+		}
+		if (debounceTimer) clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(async () => {
+			suggestions = await fetchSuggestions(query, detectedCountryCode);
+			showSuggestions = suggestions.length > 0;
+		}, 300);
+	}
+
+	async function handleSuggestionSelect(suggestion: Suggestion) {
+		showSuggestions = false;
+		searchQuery = suggestion.text;
+		const place = await fetchPlaceById(suggestion.placeId);
+		if (place) handlePlaceSelect(place);
+	}
+
+	function clearSearch() {
+		searchQuery = '';
+		suggestions = [];
+		showSuggestions = false;
+		searchInput?.focus();
 	}
 
 	function handlePlaceSelect(place: PlaceResult) {
@@ -130,6 +162,7 @@
 		longitude = place.longitude;
 		placeId = place.placeId;
 		formattedAddress = place.formattedAddress;
+		searchQuery = place.formattedAddress;
 
 		// Pan map and marker to selected place
 		if (mapInstance && place.latitude && place.longitude) {
@@ -154,6 +187,8 @@
 			country = result.country;
 			placeId = result.placeId;
 			formattedAddress = result.formattedAddress;
+			searchQuery = result.formattedAddress;
+			if (result.countryCode) detectedCountryCode = result.countryCode;
 		}
 	}
 
@@ -240,11 +275,35 @@
 					</svg>
 					<input
 						bind:this={searchInput}
+						bind:value={searchQuery}
+						oninput={handleSearchInput}
+						onfocus={() => { if (suggestions.length) showSuggestions = true; }}
 						class="af__search-input"
 						type="text"
 						placeholder="Search address..."
 						disabled={!mapsLoaded}
 					/>
+					{#if searchQuery}
+						<button class="af__search-clear" onclick={clearSearch} type="button" aria-label="Clear">
+							<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					{/if}
+					{#if showSuggestions}
+						<div class="af__suggestions">
+							{#each suggestions as suggestion}
+								<button
+									class="af__suggestion"
+									onclick={() => handleSuggestionSelect(suggestion)}
+									type="button"
+								>
+									<IconMapPin class="af__suggestion-icon" />
+									<span class="af__suggestion-text">{suggestion.text}</span>
+								</button>
+							{/each}
+						</div>
+					{/if}
 				</div>
 
 				<!-- Map -->
@@ -409,8 +468,9 @@
 </div>
 
 <style>
-	/* Autocomplete dropdown z-index fix for drawer */
-	:global(.pac-container) {
+	/* PlaceAutocompleteElement z-index fix for drawer */
+	:global(.pac-container),
+	:global(.gmp-pac-container) {
 		z-index: 99999 !important;
 	}
 
@@ -484,17 +544,17 @@
 	.af__search-icon {
 		position: absolute;
 		left: 12px;
-		top: 50%;
-		transform: translateY(-50%);
+		top: 14px;
 		width: 18px;
 		height: 18px;
 		color: var(--md-sys-color-outline);
 		pointer-events: none;
+		z-index: 1;
 	}
 
 	.af__search-input {
 		width: 100%;
-		padding: 12px 14px 12px 38px;
+		padding: 12px 40px 12px 38px;
 		border-radius: 12px;
 		border: 1.5px solid var(--md-sys-color-outline-variant);
 		background: var(--md-sys-color-surface-container);
@@ -508,6 +568,80 @@
 	.af__search-input:focus {
 		outline: none;
 		border-color: var(--md-sys-color-primary);
+	}
+
+	.af__search-clear {
+		position: absolute;
+		right: 8px;
+		top: 50%;
+		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: var(--md-sys-color-surface-container-high, rgba(255, 255, 255, 0.1));
+		cursor: pointer;
+		z-index: 1;
+	}
+
+	.af__search-clear svg {
+		width: 14px;
+		height: 14px;
+		color: var(--md-sys-color-outline);
+	}
+
+	.af__search-clear:hover {
+		background: var(--md-sys-color-surface-container-highest, rgba(255, 255, 255, 0.15));
+	}
+
+	/* Suggestions dropdown */
+	.af__suggestions {
+		position: absolute;
+		top: calc(100% + 4px);
+		left: 0;
+		right: 0;
+		background: var(--md-sys-color-surface-container);
+		border: 1.5px solid var(--md-sys-color-outline-variant);
+		border-radius: 12px;
+		overflow: hidden;
+		z-index: 10;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+	}
+
+	.af__suggestion {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		padding: 12px 14px;
+		text-align: left;
+		color: var(--md-sys-color-on-surface);
+		font-size: 0.8125rem;
+		cursor: pointer;
+		transition: background 100ms ease;
+	}
+
+	.af__suggestion:hover {
+		background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+	}
+
+	.af__suggestion + .af__suggestion {
+		border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 30%, transparent);
+	}
+
+	:global(.af__suggestion-icon) {
+		width: 16px;
+		height: 16px;
+		color: var(--md-sys-color-primary);
+		flex-shrink: 0;
+	}
+
+	.af__suggestion-text {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	/* Map area */

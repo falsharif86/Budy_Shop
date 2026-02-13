@@ -36,43 +36,78 @@ export interface PlaceResult {
 	city: string;
 	postalCode: string | null;
 	country: string;
+	countryCode: string | null;
 	latitude: number | null;
 	longitude: number | null;
 	placeId: string | null;
 	formattedAddress: string;
 }
 
-export function initAutocomplete(
-	input: HTMLInputElement,
-	onSelect: (place: PlaceResult) => void
-): any {
+export interface Suggestion {
+	placeId: string;
+	text: string;
+}
+
+export async function fetchSuggestions(
+	input: string,
+	countryCode?: string
+): Promise<Suggestion[]> {
+	if (!input.trim()) return [];
 	const google = (window as any).google;
-	const autocomplete = new google.maps.places.Autocomplete(input, {
-		types: ['address'],
-		fields: ['address_components', 'geometry', 'place_id', 'formatted_address']
-	});
 
-	autocomplete.addListener('place_changed', () => {
-		const place = autocomplete.getPlace();
-		if (!place.address_components) return;
+	const request: any = {
+		input,
+		includedPrimaryTypes: ['street_address', 'subpremise', 'route', 'premise']
+	};
 
+	if (countryCode) {
+		request.includedRegionCodes = [countryCode];
+	}
+
+	try {
+		const { suggestions } =
+			await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+		return suggestions
+			.filter((s: any) => s.placePrediction)
+			.map((s: any) => ({
+				placeId: s.placePrediction.placeId,
+				text: s.placePrediction.text.text
+			}));
+	} catch {
+		return [];
+	}
+}
+
+export async function fetchPlaceById(placeId: string): Promise<PlaceResult | null> {
+	const google = (window as any).google;
+
+	try {
+		const place = new google.maps.places.Place({ id: placeId });
+		await place.fetchFields({
+			fields: ['formattedAddress', 'location', 'addressComponents', 'id']
+		});
+
+		const components = place.addressComponents || [];
 		const get = (type: string) =>
-			place.address_components?.find((c: any) => c.types.includes(type))?.long_name ?? null;
+			components.find((c: any) => c.types.includes(type))?.longText ?? null;
+		const getShort = (type: string) =>
+			components.find((c: any) => c.types.includes(type))?.shortText ?? null;
 
-		onSelect({
+		return {
 			streetAddress: get('route') ?? '',
 			houseNumber: get('street_number'),
 			city: get('locality') ?? get('administrative_area_level_1') ?? '',
 			postalCode: get('postal_code'),
 			country: get('country') ?? '',
-			latitude: place.geometry?.location?.lat() ?? null,
-			longitude: place.geometry?.location?.lng() ?? null,
-			placeId: place.place_id ?? null,
-			formattedAddress: place.formatted_address ?? ''
-		});
-	});
-
-	return autocomplete;
+			countryCode: getShort('country')?.toLowerCase() ?? null,
+			latitude: place.location?.lat() ?? null,
+			longitude: place.location?.lng() ?? null,
+			placeId: place.id ?? null,
+			formattedAddress: place.formattedAddress ?? ''
+		};
+	} catch {
+		return null;
+	}
 }
 
 // --- Map utilities ---
@@ -134,6 +169,8 @@ export async function reverseGeocode(lat: number, lng: number): Promise<PlaceRes
 
 		const get = (type: string) =>
 			result.address_components?.find((c: any) => c.types.includes(type))?.long_name ?? null;
+		const getShort = (type: string) =>
+			result.address_components?.find((c: any) => c.types.includes(type))?.short_name ?? null;
 
 		return {
 			streetAddress: get('route') ?? '',
@@ -141,6 +178,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<PlaceRes
 			city: get('locality') ?? get('administrative_area_level_1') ?? '',
 			postalCode: get('postal_code'),
 			country: get('country') ?? '',
+			countryCode: getShort('country')?.toLowerCase() ?? null,
 			latitude: lat,
 			longitude: lng,
 			placeId: result.place_id ?? null,
