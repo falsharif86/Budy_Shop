@@ -5,7 +5,7 @@
 	import budyLogo from '$lib/assets/budy_logo.svg';
 	import { IconCheck } from '$lib/components/icons/index.js';
 	import CountryCodeSelector from '$lib/components/shared/CountryCodeSelector.svelte';
-	import { DEFAULT_COUNTRY, type Country } from '$lib/data/countries.js';
+	import { COUNTRIES, DEFAULT_COUNTRY, type Country } from '$lib/data/countries.js';
 	import Numpad from '$lib/components/shared/Numpad.svelte';
 	import { ui } from '$lib/stores/ui.svelte.js';
 
@@ -21,9 +21,24 @@
 	let loading = $state(false);
 	let error = $state('');
 
-	// Phone auth state
-	let localNumber = $state('');
-	let selectedCountry = $state<Country>(DEFAULT_COUNTRY);
+	// Phone auth state — restore from localStorage
+	const STORAGE_KEY_PHONE = 'budy_login_phone';
+	const STORAGE_KEY_COUNTRY = 'budy_login_country';
+
+	function loadSavedCountry(): Country {
+		try {
+			const code = localStorage.getItem(STORAGE_KEY_COUNTRY);
+			if (code) return COUNTRIES.find((c) => c.code === code) ?? DEFAULT_COUNTRY;
+		} catch { /* SSR or storage unavailable */ }
+		return DEFAULT_COUNTRY;
+	}
+
+	function loadSavedPhone(): string {
+		try { return localStorage.getItem(STORAGE_KEY_PHONE) ?? ''; } catch { return ''; }
+	}
+
+	let localNumber = $state(loadSavedPhone());
+	let selectedCountry = $state<Country>(loadSavedCountry());
 	let pin = $state(['', '', '', '']);
 	let verificationId = $state('');
 	let countdown = $state(0);
@@ -136,7 +151,6 @@
 
 	function resetState() {
 		authStep = 'phone-input';
-		localNumber = '';
 		pin = ['', '', '', ''];
 		verificationId = '';
 		error = '';
@@ -213,6 +227,10 @@
 				pin = ['', '', '', ''];
 				startCountdown(result.expiresIn ?? 300);
 				setTimeout(() => pinInputEls[0]?.focus(), 50);
+				try {
+					localStorage.setItem(STORAGE_KEY_PHONE, localNumber);
+					localStorage.setItem(STORAGE_KEY_COUNTRY, selectedCountry.code);
+				} catch { /* storage unavailable */ }
 			} else {
 				error = result.error ?? 'Failed to send verification code.';
 			}

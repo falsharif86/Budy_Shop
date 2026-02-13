@@ -5,7 +5,7 @@
 	import { orderStore } from '$lib/stores/orders.svelte.js';
 	import { addressStore } from '$lib/stores/addresses.svelte.js';
 	import { formatPrice } from '$lib/utils/currency.js';
-	import { getCartItemPrice, getCartItemName, getCartItemId } from '$lib/types/cart.js';
+	import { getCartItemPrice } from '$lib/types/cart.js';
 	import type { OnlineOrderDetail } from '$lib/types/order.js';
 	import type { MemberAddress } from '$lib/types/address.js';
 	import { IconChevronLeft, IconClose, IconStore, IconDelivery, IconCheck, IconPlus } from '$lib/components/icons/index.js';
@@ -17,15 +17,11 @@
 	const taxAmount = $derived(subtotal * taxRate);
 	const total = $derived(subtotal + taxAmount);
 
-	let customerPhone = $state('');
-	let customerName = $state('');
 	let customerNotes = $state('');
 	let submitting = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let selectedAddressId = $state<string | null>(null);
 
-	const phoneDigits = $derived(customerPhone.replace(/\D/g, ''));
-	const phoneValid = $derived(phoneDigits.length >= 7);
 	const isPickup = $derived(ui.selectedDeliveryOption === 'pickup');
 	const isDelivery = $derived(ui.selectedDeliveryOption === 'delivery');
 
@@ -44,7 +40,7 @@
 
 	const canPlaceOrder = $derived(
 		!submitting &&
-		(isPickup || (isDelivery && phoneValid && !!selectedAddress))
+		(isPickup || (isDelivery && !!selectedAddress))
 	);
 
 	async function handlePlaceOrder() {
@@ -62,8 +58,8 @@
 					unitPrice: getCartItemPrice(item)
 				})),
 				fulfillmentType: isDelivery ? 1 : 0,
-				customerName: customerName.trim() || null,
-				customerPhone: customerPhone.trim() || null,
+				customerName: null,
+				customerPhone: null,
 				customerNotes: customerNotes.trim() || null
 			};
 
@@ -71,8 +67,11 @@
 				body.memberEmail = user.email;
 				body.memberName = user.name || null;
 				body.memberPhotoUrl = user.picture || null;
-				if (isPickup && !body.customerName) {
+				if (!body.customerName) {
 					body.customerName = user.name || null;
+				}
+				if (!body.customerPhone) {
+					body.customerPhone = user.phoneNumber || null;
 				}
 			}
 			if (addressStore.memberId) {
@@ -108,8 +107,6 @@
 			const detail: OnlineOrderDetail = await res.json();
 			orderStore.addOrder(detail);
 			cart.clear();
-			customerPhone = '';
-			customerName = '';
 			customerNotes = '';
 			selectedAddressId = null;
 			ui.showSuccess();
@@ -163,22 +160,6 @@
 				</button>
 			</div>
 		{/if}
-
-		<!-- Order summary -->
-		<div class="checkout-section">
-			<h3 class="checkout-section__title">Order Summary</h3>
-			<div class="checkout-items">
-				{#each cart.items as item (getCartItemId(item))}
-					<div class="checkout-item">
-						<span class="checkout-item__desc">
-							{getCartItemName(item)}
-							<span class="checkout-item__qty">x{item.quantity}</span>
-						</span>
-						<span class="checkout-item__price">{formatPrice(getCartItemPrice(item) * item.quantity)}</span>
-					</div>
-				{/each}
-			</div>
-		</div>
 
 		<!-- Totals -->
 		<div class="checkout-totals">
@@ -263,44 +244,16 @@
 			{/if}
 		</div>
 
-		<!-- Contact information (visible when option selected) -->
+		<!-- Order notes (visible when option selected) -->
 		{#if isPickup || isDelivery}
 			<div class="checkout-section contact-section">
 				<h3 class="checkout-section__title">
 					<svg class="checkout-section__title-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-						<path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+						<path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
 					</svg>
-					{isDelivery ? 'Contact Information' : 'Order Notes'}
+					Order Notes
 				</h3>
 				<div class="contact-fields">
-					{#if isDelivery}
-						<div class="field">
-							<label class="field__label" for="checkout-phone">
-								Phone number <span class="field__required">*</span>
-							</label>
-							<input
-								id="checkout-phone"
-								class="field__input"
-								class:field__input--error={customerPhone.length > 0 && !phoneValid}
-								type="tel"
-								placeholder="+31 6 1234 5678"
-								bind:value={customerPhone}
-							/>
-							{#if customerPhone.length > 0 && !phoneValid}
-								<span class="field__hint field__hint--error">At least 7 digits required</span>
-							{/if}
-						</div>
-						<div class="field">
-							<label class="field__label" for="checkout-name">Name <span class="field__optional">(optional)</span></label>
-							<input
-								id="checkout-name"
-								class="field__input"
-								type="text"
-								placeholder="Your name"
-								bind:value={customerName}
-							/>
-						</div>
-					{/if}
 					<div class="field">
 						<label class="field__label" for="checkout-notes">Notes <span class="field__optional">(optional)</span></label>
 						<textarea
@@ -469,43 +422,6 @@
 		height: 18px;
 	}
 
-	/* --- Order items --- */
-	.checkout-items {
-		padding: 12px 16px;
-		border-radius: 12px;
-		background: color-mix(in srgb, var(--md-sys-color-surface-container) 90%, transparent);
-	}
-
-	.checkout-items > :global(* + *) {
-		border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 20%, transparent);
-	}
-
-	.checkout-item {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 8px 0;
-	}
-
-	.checkout-item__desc {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--md-sys-color-on-surface);
-	}
-
-	.checkout-item__qty {
-		margin-left: 6px;
-		font-size: 0.75rem;
-		font-weight: 400;
-		color: var(--md-sys-color-outline);
-	}
-
-	.checkout-item__price {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--md-sys-color-on-surface);
-	}
-
 	/* --- Totals --- */
 	.checkout-totals {
 		margin-bottom: 20px;
@@ -651,16 +567,11 @@
 		margin-bottom: 6px;
 	}
 
-	.field__required {
-		color: var(--md-sys-color-error);
-	}
-
 	.field__optional {
 		font-weight: 400;
 		color: var(--md-sys-color-outline);
 	}
 
-	.field__input,
 	.field__textarea {
 		width: 100%;
 		padding: 10px 14px;
@@ -672,35 +583,13 @@
 		font-family: inherit;
 		transition: border-color 150ms ease;
 		box-sizing: border-box;
-	}
-
-	.field__input:focus,
-	.field__textarea:focus {
-		outline: none;
-		border-color: var(--md-sys-color-primary);
-	}
-
-	.field__input--error {
-		border-color: var(--md-sys-color-error);
-	}
-
-	.field__input--error:focus {
-		border-color: var(--md-sys-color-error);
-	}
-
-	.field__textarea {
 		resize: vertical;
 		min-height: 60px;
 	}
 
-	.field__hint {
-		display: block;
-		font-size: 0.75rem;
-		margin-top: 4px;
-	}
-
-	.field__hint--error {
-		color: var(--md-sys-color-error);
+	.field__textarea:focus {
+		outline: none;
+		border-color: var(--md-sys-color-primary);
 	}
 
 	/* --- Footer --- */
