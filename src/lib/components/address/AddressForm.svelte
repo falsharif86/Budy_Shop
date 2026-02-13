@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import { onMount, untrack } from 'svelte';
-	import type { MemberAddress, CreateAddressPayload, AddressLabel } from '$lib/types/address.js';
+	import type { MemberAddress, CreateAddressPayload } from '$lib/types/address.js';
 	import {
 		loadGoogleMaps,
 		fetchSuggestions,
@@ -15,7 +15,7 @@
 		type PlaceResult,
 		type Suggestion
 	} from '$lib/utils/google-maps.js';
-	import { IconChevronLeft, IconMapPin } from '$lib/components/icons/index.js';
+	import { IconChevronLeft, IconMapPin, IconStore } from '$lib/components/icons/index.js';
 
 	interface Props {
 		editAddress?: MemberAddress | null;
@@ -38,16 +38,14 @@
 	let streetAddress = $state(initial?.streetAddress ?? '');
 	let houseNumber = $state(initial?.houseNumber ?? '');
 	let apartment = $state('');
-	let floor = $state(initial?.floor ?? '');
 	let building = $state(initial?.building ?? '');
+	let buildingFromEstablishment = $state(false);
 	let city = $state(initial?.city ?? '');
 	let postalCode = $state(initial?.postalCode ?? '');
 	let country = $state(initial?.country ?? '');
 	let latitude = $state<number | null>(initial?.latitude ?? null);
 	let longitude = $state<number | null>(initial?.longitude ?? null);
 	let placeId = $state<string | null>(initial?.placeId ?? null);
-	let label = $state<AddressLabel>(initial?.label ?? 'Home');
-	let isDefault = $state(initial?.isDefault ?? false);
 	let formattedAddress = $state('');
 
 	let searchInput = $state<HTMLInputElement | null>(null);
@@ -59,10 +57,9 @@
 	let mapLoadError = $state(false);
 	let reversing = $state(false);
 	let saving = $state(false);
-	let detailsOpen = $state(false);
 
-	// Country restriction for autocomplete (set by geolocation reverse geocode)
-	let detectedCountryCode = $state<string | undefined>(undefined);
+	// Country restriction for autocomplete (hardcoded to Thailand for now)
+	let detectedCountryCode = $state<string | undefined>('th');
 
 	// Map instances (not reactive)
 	let mapInstance: any = null;
@@ -71,7 +68,7 @@
 
 	const hasLocation = $derived(latitude !== null && longitude !== null);
 	const canConfirm = $derived(hasLocation || formattedAddress.length > 0);
-	const canSave = $derived(streetAddress.trim().length > 0 && city.trim().length > 0);
+	const canSave = $derived(hasLocation || (streetAddress.trim().length > 0 && city.trim().length > 0));
 
 	const staticMapUrl = $derived.by(() => {
 		if (!apiKey || !latitude || !longitude) return '';
@@ -94,30 +91,40 @@
 			});
 	});
 
+	function ensureMarker(lat: number, lng: number) {
+		if (markerInstance) {
+			panTo(mapInstance, lat, lng, markerInstance);
+		} else {
+			markerInstance = addDraggableMarker(mapInstance, lat, lng, handleMarkerDrag);
+			panTo(mapInstance, lat, lng);
+		}
+		mapInstance.setZoom(17);
+	}
+
 	function initSearchMap() {
-		// Init map
 		const container = mapContainer;
 		if (!container) return;
 
-		const startLat = latitude ?? DEFAULT_CENTER.lat;
-		const startLng = longitude ?? DEFAULT_CENTER.lng;
-		const startZoom = latitude ? 17 : DEFAULT_ZOOM;
+		// If editing with existing coordinates, show marker immediately
+		if (latitude && longitude) {
+			mapInstance = initMap(container, latitude, longitude, 17);
+			markerInstance = addDraggableMarker(mapInstance, latitude, longitude, handleMarkerDrag);
+			return;
+		}
 
-		mapInstance = initMap(container, startLat, startLng, startZoom);
-		markerInstance = addDraggableMarker(mapInstance, startLat, startLng, handleMarkerDrag);
+		// Otherwise show a wide view with no marker until geolocation resolves
+		mapInstance = initMap(container, DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, DEFAULT_ZOOM);
 
-		// Try browser geolocation if no existing coordinates
-		if (!latitude && navigator.geolocation) {
+		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(
 				(pos) => {
 					const lat = pos.coords.latitude;
 					const lng = pos.coords.longitude;
-					panTo(mapInstance, lat, lng, markerInstance);
-					mapInstance.setZoom(17);
+					ensureMarker(lat, lng);
 					handleMarkerDrag(lat, lng);
 				},
 				() => {
-					// Ignore - keep Amsterdam default
+					// Geolocation denied/failed — user can still search
 				},
 				{ timeout: 5000 }
 			);
@@ -141,6 +148,12 @@
 	async function handleSuggestionSelect(suggestion: Suggestion) {
 		showSuggestions = false;
 		searchQuery = suggestion.text;
+		if (suggestion.isEstablishment && suggestion.name) {
+			building = suggestion.name;
+			buildingFromEstablishment = true;
+		} else {
+			buildingFromEstablishment = false;
+		}
 		const place = await fetchPlaceById(suggestion.placeId);
 		if (place) handlePlaceSelect(place);
 	}
@@ -162,12 +175,10 @@
 		longitude = place.longitude;
 		placeId = place.placeId;
 		formattedAddress = place.formattedAddress;
-		searchQuery = place.formattedAddress;
 
-		// Pan map and marker to selected place
+		// Pan map and marker to selected place (create marker if first location)
 		if (mapInstance && place.latitude && place.longitude) {
-			panTo(mapInstance, place.latitude, place.longitude, markerInstance);
-			mapInstance.setZoom(17);
+			ensureMarker(place.latitude, place.longitude);
 		}
 	}
 
@@ -187,7 +198,6 @@
 			country = result.country;
 			placeId = result.placeId;
 			formattedAddress = result.formattedAddress;
-			searchQuery = result.formattedAddress;
 			if (result.countryCode) detectedCountryCode = result.countryCode;
 		}
 	}
@@ -204,10 +214,6 @@
 		});
 	}
 
-	function skipToManual() {
-		step = 'details';
-	}
-
 	function handleSubmit() {
 		if (!canSave || saving) return;
 		saving = true;
@@ -220,10 +226,10 @@
 			: houseNumber.trim() || null;
 
 		const payload: CreateAddressPayload = {
-			label,
+			label: 'Home',
 			streetAddress: streetAddress.trim(),
 			houseNumber: finalHouseNumber,
-			floor: floor.trim() || null,
+			floor: null,
 			building: building.trim() || null,
 			city: city.trim(),
 			postalCode: postalCode.trim() || null,
@@ -231,7 +237,7 @@
 			latitude,
 			longitude,
 			placeId,
-			isDefault
+			isDefault: false
 		};
 		onsave(payload);
 	}
@@ -298,7 +304,11 @@
 									onclick={() => handleSuggestionSelect(suggestion)}
 									type="button"
 								>
-									<IconMapPin class="af__suggestion-icon" />
+									{#if suggestion.isEstablishment}
+										<IconStore class="af__suggestion-icon" />
+									{:else}
+										<IconMapPin class="af__suggestion-icon" />
+									{/if}
 									<span class="af__suggestion-text">{suggestion.text}</span>
 								</button>
 							{/each}
@@ -327,11 +337,6 @@
 					</div>
 				{/if}
 
-				<!-- Manual fallback -->
-				<button class="af__manual-btn" onclick={skipToManual}>
-					Enter address manually
-				</button>
-
 				<!-- Confirm button -->
 				<button
 					class="af__confirm-btn"
@@ -346,9 +351,17 @@
 		{:else}
 			<!-- Step 2: Address Details -->
 			<div class="af__details-section">
+				<!-- Establishment name banner -->
+				{#if buildingFromEstablishment && building}
+					<div class="af__establishment-banner">
+						<IconStore class="af__establishment-icon" />
+						<span class="af__establishment-name">{building}</span>
+					</div>
+				{/if}
+
 				<!-- Static map + address summary -->
 				{#if staticMapUrl}
-					<div class="af__static-map-card">
+					<div class="af__static-map-card" class:af__static-map-card--tall={buildingFromEstablishment}>
 						<img class="af__static-map" src={staticMapUrl} alt="Selected location" loading="lazy" />
 						<div class="af__static-map-overlay">
 							<IconMapPin class="af__static-pin" />
@@ -374,74 +387,19 @@
 					/>
 				</div>
 
-				<!-- Floor + Building row -->
-				<div class="af__row">
+				<!-- Building name (full-width, hidden for establishments) -->
+				{#if !buildingFromEstablishment}
 					<div class="af__field">
-						<label class="af__field-label" for="af-floor">Floor</label>
-						<input id="af-floor" class="af__input" type="text" bind:value={floor} placeholder="e.g. 2nd" />
+						<label class="af__field-label" for="af-building">Building name</label>
+						<input
+							id="af-building"
+							class="af__input"
+							type="text"
+							bind:value={building}
+							placeholder="e.g. Block A"
+						/>
 					</div>
-					<div class="af__field">
-						<label class="af__field-label" for="af-building">Building</label>
-						<input id="af-building" class="af__input" type="text" bind:value={building} placeholder="e.g. Block A" />
-					</div>
-				</div>
-
-				<!-- Label chips -->
-				<div class="af__label-group">
-					{#each ['Home', 'Work', 'Other'] as opt}
-						<button
-							class="af__label-chip"
-							class:af__label-chip--active={label === opt}
-							onclick={() => (label = opt as AddressLabel)}
-							type="button"
-						>
-							{opt}
-						</button>
-					{/each}
-				</div>
-
-				<!-- Collapsible address details -->
-				<details class="af__edit-details" bind:open={detailsOpen}>
-					<summary class="af__edit-summary">
-						{detailsOpen ? '- Hide' : '+ Edit'} address details
-					</summary>
-					<div class="af__edit-fields">
-						<div class="af__row">
-							<div class="af__field af__field--grow">
-								<label class="af__field-label" for="af-street">
-									Street <span class="af__required">*</span>
-								</label>
-								<input id="af-street" class="af__input" type="text" bind:value={streetAddress} placeholder="Street name" />
-							</div>
-							<div class="af__field af__field--small">
-								<label class="af__field-label" for="af-number">No.</label>
-								<input id="af-number" class="af__input" type="text" bind:value={houseNumber} placeholder="123" />
-							</div>
-						</div>
-						<div class="af__row">
-							<div class="af__field af__field--grow">
-								<label class="af__field-label" for="af-city">
-									City <span class="af__required">*</span>
-								</label>
-								<input id="af-city" class="af__input" type="text" bind:value={city} placeholder="City" />
-							</div>
-							<div class="af__field af__field--small">
-								<label class="af__field-label" for="af-postal">Postal</label>
-								<input id="af-postal" class="af__input" type="text" bind:value={postalCode} placeholder="1234 AB" />
-							</div>
-						</div>
-						<div class="af__field">
-							<label class="af__field-label" for="af-country">Country</label>
-							<input id="af-country" class="af__input" type="text" bind:value={country} placeholder="Country" />
-						</div>
-					</div>
-				</details>
-
-				<!-- Default toggle -->
-				<label class="af__toggle">
-					<input type="checkbox" bind:checked={isDefault} class="af__checkbox" />
-					<span class="af__toggle-label">Set as default address</span>
-				</label>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -717,22 +675,6 @@
 		text-overflow: ellipsis;
 	}
 
-	/* Manual fallback */
-	.af__manual-btn {
-		align-self: flex-start;
-		padding: 6px 12px;
-		border-radius: 8px;
-		font-size: 0.8125rem;
-		font-weight: 500;
-		color: var(--md-sys-color-primary);
-		background: transparent;
-		transition: background-color 150ms ease;
-	}
-
-	.af__manual-btn:hover {
-		background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
-	}
-
 	/* Confirm location button */
 	.af__confirm-btn {
 		width: 100%;
@@ -775,6 +717,10 @@
 		border-radius: 14px;
 		overflow: hidden;
 		border: 1.5px solid var(--md-sys-color-outline-variant);
+	}
+
+	.af__static-map-card--tall .af__static-map {
+		height: 200px;
 	}
 
 	.af__static-map {
@@ -854,22 +800,10 @@
 		gap: 4px;
 	}
 
-	.af__field--grow {
-		flex: 2;
-	}
-
-	.af__field--small {
-		flex: 0 0 80px;
-	}
-
 	.af__field-label {
 		font-size: 0.75rem;
 		font-weight: 500;
 		color: var(--md-sys-color-on-surface-variant);
-	}
-
-	.af__required {
-		color: var(--md-sys-color-error);
 	}
 
 	.af__input {
@@ -889,87 +823,28 @@
 		border-color: var(--md-sys-color-primary);
 	}
 
-	.af__row {
-		display: flex;
-		gap: 10px;
-	}
-
-	/* Label chips */
-	.af__label-group {
-		display: flex;
-		gap: 8px;
-	}
-
-	.af__label-chip {
-		padding: 6px 16px;
-		border-radius: 9999px;
-		font-size: 0.8125rem;
-		font-weight: 500;
-		border: 1.5px solid var(--md-sys-color-outline-variant);
-		background: var(--md-sys-color-surface-container);
-		color: var(--md-sys-color-on-surface-variant);
-		transition: all 150ms ease;
-		cursor: pointer;
-	}
-
-	.af__label-chip:hover {
-		border-color: var(--md-sys-color-outline);
-	}
-
-	.af__label-chip--active {
-		border-color: var(--md-sys-color-primary);
-		background: color-mix(in srgb, var(--md-sys-color-primary-container) 40%, transparent);
-		color: var(--md-sys-color-primary);
-	}
-
-	/* Collapsible edit details */
-	.af__edit-details {
-		border-radius: 10px;
-	}
-
-	.af__edit-summary {
-		font-size: 0.8125rem;
-		font-weight: 500;
-		color: var(--md-sys-color-primary);
-		cursor: pointer;
-		padding: 4px 0;
-		list-style: none;
-		user-select: none;
-	}
-
-	.af__edit-summary::-webkit-details-marker {
-		display: none;
-	}
-
-	.af__edit-summary::marker {
-		content: '';
-	}
-
-	.af__edit-fields {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		padding-top: 12px;
-	}
-
-	/* Toggle */
-	.af__toggle {
+	/* Establishment banner */
+	.af__establishment-banner {
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		padding: 4px 0;
-		cursor: pointer;
+		padding: 12px 14px;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--md-sys-color-primary-container) 30%, var(--md-sys-color-surface-container));
+		border: 1.5px solid color-mix(in srgb, var(--md-sys-color-primary) 30%, transparent);
 	}
 
-	.af__checkbox {
-		width: 18px;
-		height: 18px;
-		accent-color: var(--md-sys-color-primary);
+	:global(.af__establishment-icon) {
+		width: 20px;
+		height: 20px;
+		color: var(--md-sys-color-primary);
+		flex-shrink: 0;
 	}
 
-	.af__toggle-label {
-		font-size: 0.8125rem;
-		color: var(--md-sys-color-on-surface-variant);
+	.af__establishment-name {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--md-sys-color-on-surface);
 	}
 
 	/* Footer */

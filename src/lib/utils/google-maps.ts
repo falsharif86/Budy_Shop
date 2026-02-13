@@ -46,6 +46,8 @@ export interface PlaceResult {
 export interface Suggestion {
 	placeId: string;
 	text: string;
+	name: string;
+	isEstablishment: boolean;
 }
 
 export async function fetchSuggestions(
@@ -55,10 +57,7 @@ export async function fetchSuggestions(
 	if (!input.trim()) return [];
 	const google = (window as any).google;
 
-	const request: any = {
-		input,
-		includedPrimaryTypes: ['street_address', 'subpremise', 'route', 'premise']
-	};
+	const request: any = { input };
 
 	if (countryCode) {
 		request.includedRegionCodes = [countryCode];
@@ -69,10 +68,15 @@ export async function fetchSuggestions(
 			await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 		return suggestions
 			.filter((s: any) => s.placePrediction)
-			.map((s: any) => ({
-				placeId: s.placePrediction.placeId,
-				text: s.placePrediction.text.text
-			}));
+			.map((s: any) => {
+				const types: string[] = s.placePrediction.types ?? [];
+				return {
+					placeId: s.placePrediction.placeId,
+					text: s.placePrediction.text.text,
+					name: s.placePrediction.structuredFormat?.mainText?.text ?? '',
+					isEstablishment: types.includes('establishment')
+				};
+			});
 	} catch {
 		return [];
 	}
@@ -112,7 +116,7 @@ export async function fetchPlaceById(placeId: string): Promise<PlaceResult | nul
 
 // --- Map utilities ---
 
-export const DEFAULT_CENTER = { lat: 52.3676, lng: 4.9041 }; // Amsterdam
+export const DEFAULT_CENTER = { lat: 13.7563, lng: 100.5018 }; // Bangkok
 export const DEFAULT_ZOOM = 15;
 
 export function initMap(
