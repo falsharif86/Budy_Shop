@@ -22,6 +22,7 @@ declare global {
 				email: string;
 				name: string;
 				picture?: string;
+				phoneNumber?: string;
 				accessToken: string;
 				roles: string[];
 			} | null;
@@ -36,6 +37,7 @@ declare global {
 				email: string;
 				name: string;
 				picture?: string;
+				phoneNumber?: string;
 				roles: string[];
 			} | null;
 		}

@@ -142,7 +142,7 @@
 					</div>
 					<div class="user-info">
 						<span class="user-name">{user.name}</span>
-						<span class="user-email">{user.email}</span>
+						<span class="user-email">{user.phoneNumber ?? user.email}</span>
 					</div>
 				</div>
 				<button class="sign-out-btn" onclick={handleSignOut}>

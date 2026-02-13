@@ -33,6 +33,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				email: session.email,
 				name: session.name,
 				picture: session.picture,
+				phoneNumber: session.phoneNumber,
 				accessToken: session.accessToken,
 				roles: session.roles
 			}

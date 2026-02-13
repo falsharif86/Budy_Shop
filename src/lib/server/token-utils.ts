@@ -53,6 +53,10 @@ export function extractSessionFromToken(
 		: [String(roleClaim)];
 	const picture = claims.picture ? String(claims.picture) : undefined;
 
+	// Detect phone auth: email like "66933786822@phone.budy.app" → extract phone number
+	const phoneMatch = email.match(/^(\d+)@phone\.budy\.app$/);
+	const phoneNumber = phoneMatch ? `+${phoneMatch[1]}` : undefined;
+
 	return {
 		accessToken,
 		refreshToken,
@@ -60,6 +64,7 @@ export function extractSessionFromToken(
 		email,
 		name,
 		picture,
+		phoneNumber,
 		roles,
 		tenantId,
 		expiresAt: Math.floor(Date.now() / 1000) + expiresIn

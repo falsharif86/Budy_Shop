@@ -63,7 +63,7 @@
 				})),
 				fulfillmentType: isDelivery ? 1 : 0,
 				customerName: customerName.trim() || null,
-				customerPhone: customerPhone.trim(),
+				customerPhone: customerPhone.trim() || null,
 				customerNotes: customerNotes.trim() || null
 			};
 

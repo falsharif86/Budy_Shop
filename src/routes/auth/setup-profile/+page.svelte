@@ -17,17 +17,19 @@
 		'Jaguar', 'Lynx', 'Falcon', 'Condor', 'Panther'
 	];
 
+	const AVATAR_BASE = 'https://buddy-server.s3.ap-southeast-7.amazonaws.com/host/default-avatars';
+
 	const AVATARS = [
-		{ id: 'panda', src: '/avatars/panda.webp', label: 'Panda' },
-		{ id: 'phoenix', src: '/avatars/phoenix.webp', label: 'Phoenix' },
-		{ id: 'dragon', src: '/avatars/dragon.webp', label: 'Dragon' },
-		{ id: 'tiger', src: '/avatars/tiger.webp', label: 'Tiger' },
-		{ id: 'wolf', src: '/avatars/wolf.webp', label: 'Wolf' },
-		{ id: 'eagle', src: '/avatars/eagle.webp', label: 'Eagle' },
-		{ id: 'dolphin', src: '/avatars/dolphin.webp', label: 'Dolphin' },
-		{ id: 'koala', src: '/avatars/koala.webp', label: 'Koala' },
-		{ id: 'owl', src: '/avatars/owl.webp', label: 'Owl' },
-		{ id: 'fox', src: '/avatars/fox.webp', label: 'Fox' }
+		{ id: 'panda', src: `${AVATAR_BASE}/panda.webp`, label: 'Panda' },
+		{ id: 'phoenix', src: `${AVATAR_BASE}/phoenix.webp`, label: 'Phoenix' },
+		{ id: 'dragon', src: `${AVATAR_BASE}/dragon.webp`, label: 'Dragon' },
+		{ id: 'tiger', src: `${AVATAR_BASE}/tiger.webp`, label: 'Tiger' },
+		{ id: 'wolf', src: `${AVATAR_BASE}/wolf.webp`, label: 'Wolf' },
+		{ id: 'eagle', src: `${AVATAR_BASE}/eagle.webp`, label: 'Eagle' },
+		{ id: 'dolphin', src: `${AVATAR_BASE}/dolphin.webp`, label: 'Dolphin' },
+		{ id: 'koala', src: `${AVATAR_BASE}/koala.webp`, label: 'Koala' },
+		{ id: 'owl', src: `${AVATAR_BASE}/owl.webp`, label: 'Owl' },
+		{ id: 'fox', src: `${AVATAR_BASE}/fox.webp`, label: 'Fox' }
 	];
 
 	let { data } = $props();

@@ -19,7 +19,7 @@
 
 	interface Props {
 		editAddress?: MemberAddress | null;
-		onsave: (payload: CreateAddressPayload) => void;
+		onsave: (payload: CreateAddressPayload) => void | Promise<void>;
 		oncancel: () => void;
 	}
 
@@ -214,32 +214,39 @@
 		});
 	}
 
-	function handleSubmit() {
+	async function handleSubmit() {
 		if (!canSave || saving) return;
 		saving = true;
 
-		// Combine apartment into houseNumber if provided
-		const finalHouseNumber = apartment.trim()
-			? houseNumber.trim()
-				? `${houseNumber.trim()}, ${apartment.trim()}`
-				: apartment.trim()
-			: houseNumber.trim() || null;
+		try {
+			// Combine apartment into houseNumber if provided
+			const finalHouseNumber = apartment.trim()
+				? houseNumber.trim()
+					? `${houseNumber.trim()}, ${apartment.trim()}`
+					: apartment.trim()
+				: houseNumber.trim() || null;
 
-		const payload: CreateAddressPayload = {
-			label: 'Home',
-			streetAddress: streetAddress.trim(),
-			houseNumber: finalHouseNumber,
-			floor: null,
-			building: building.trim() || null,
-			city: city.trim(),
-			postalCode: postalCode.trim() || null,
-			country: country.trim(),
-			latitude,
-			longitude,
-			placeId,
-			isDefault: false
-		};
-		onsave(payload);
+			// Use formattedAddress as fallback when streetAddress is empty (e.g. rural locations)
+			const finalStreetAddress = streetAddress.trim() || formattedAddress || 'Unknown';
+
+			const payload: CreateAddressPayload = {
+				label: 'Home',
+				streetAddress: finalStreetAddress,
+				houseNumber: finalHouseNumber,
+				floor: null,
+				building: building.trim() || null,
+				city: city.trim(),
+				postalCode: postalCode.trim() || null,
+				country: country.trim(),
+				latitude,
+				longitude,
+				placeId,
+				isDefault: false
+			};
+			await onsave(payload);
+		} finally {
+			saving = false;
+		}
 	}
 
 	// Build display address for preview

@@ -4,12 +4,11 @@
 
 	let { data } = $props();
 
-	type AuthStep = 'choose' | 'phone-input' | 'pin-input';
+	type AuthStep = 'phone-input' | 'pin-input';
 
-	let authStep = $state<AuthStep>('choose');
+	let authStep = $state<AuthStep>('phone-input');
 	let loading = $state(false);
 	let error = $state('');
-	let googleButtonEl: HTMLDivElement | undefined = $state();
 
 	// Phone auth state
 	let phoneNumber = $state('');
@@ -22,89 +21,14 @@
 	const tenantName = $derived(data.tenant?.name ?? 'Shop');
 
 	$effect(() => {
-		if (data.googleClientId && googleButtonEl && authStep === 'choose') {
-			loadGoogleScript();
-		}
-	});
-
-	$effect(() => {
 		return () => {
 			if (countdownInterval) clearInterval(countdownInterval);
 		};
 	});
 
-	function loadGoogleScript() {
-		if (typeof google !== 'undefined' && google.accounts) {
-			initializeGoogle();
-			return;
-		}
-
-		const script = document.createElement('script');
-		script.src = 'https://accounts.google.com/gsi/client';
-		script.async = true;
-		script.defer = true;
-		script.onload = () => initializeGoogle();
-		script.onerror = () => {
-			error = 'Failed to load Google Sign-In. Please try again.';
-		};
-		document.head.appendChild(script);
-	}
-
-	function initializeGoogle() {
-		if (!googleButtonEl) return;
-
-		google.accounts.id.initialize({
-			client_id: data.googleClientId,
-			callback: handleCredentialResponse,
-			auto_select: false,
-			cancel_on_tap_outside: true
-		});
-
-		google.accounts.id.renderButton(googleButtonEl, {
-			theme: 'filled_black',
-			size: 'large',
-			shape: 'pill',
-			width: 320,
-			text: 'continue_with',
-			logo_alignment: 'left'
-		});
-	}
-
-	async function handleCredentialResponse(response: google.accounts.id.CredentialResponse) {
-		loading = true;
-		error = '';
-
-		try {
-			const res = await fetch('/auth/google', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ idToken: response.credential })
-			});
-
-			const result = await res.json();
-
-			if (result.success) {
-				await goto('/', { replaceState: true, invalidateAll: true });
-			} else {
-				error = result.error ?? 'Sign in failed. Please try again.';
-			}
-		} catch {
-			error = 'Network error. Please check your connection and try again.';
-		} finally {
-			loading = false;
-		}
-	}
-
-	function goToPhoneInput() {
-		authStep = 'phone-input';
-		error = '';
-	}
-
 	function goBack() {
 		if (authStep === 'pin-input') {
 			authStep = 'phone-input';
-		} else {
-			authStep = 'choose';
 		}
 		error = '';
 	}
@@ -258,7 +182,7 @@
 	<div class="login-card">
 		<!-- Logo & Branding -->
 		<div class="login-header">
-			{#if authStep !== 'choose'}
+			{#if authStep === 'pin-input'}
 				<button class="back-btn" onclick={goBack} aria-label="Go back">
 					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<path d="M19 12H5M12 19l-7-7 7-7" />
@@ -268,44 +192,16 @@
 			<img src={budyLogo} alt="Budy" class="login-logo" />
 			<h1 class="login-title">Welcome to {tenantName}</h1>
 			<p class="login-subtitle">
-				{#if authStep === 'choose'}
-					Sign in to your account to continue
-				{:else if authStep === 'phone-input'}
-					Enter your phone number
+				{#if authStep === 'phone-input'}
+					Sign in with your phone number
 				{:else}
 					Enter the verification code
 				{/if}
 			</p>
 		</div>
 
-		<!-- Step 1: Choose method -->
-		{#if authStep === 'choose'}
-			<div class="login-actions">
-				{#if loading}
-					<div class="login-loading">
-						<div class="spinner"></div>
-						<span class="loading-text">Signing you in...</span>
-					</div>
-				{:else}
-					<div bind:this={googleButtonEl} class="google-btn-container"></div>
-
-					<div class="divider">
-						<span class="divider-line"></span>
-						<span class="divider-text">or</span>
-						<span class="divider-line"></span>
-					</div>
-
-					<button class="phone-btn" onclick={goToPhoneInput}>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-						</svg>
-						Continue with Phone
-					</button>
-				{/if}
-			</div>
-
-		<!-- Step 2: Phone input -->
-		{:else if authStep === 'phone-input'}
+		<!-- Phone input -->
+		{#if authStep === 'phone-input'}
 			<div class="login-actions">
 				<div class="phone-input-group">
 					<input
@@ -455,52 +351,6 @@
 		align-items: center;
 		gap: 1rem;
 		width: 100%;
-	}
-
-	.google-btn-container {
-		display: flex;
-		justify-content: center;
-		min-height: 44px;
-	}
-
-	.divider {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		width: 100%;
-		padding: 0.25rem 0;
-	}
-
-	.divider-line {
-		flex: 1;
-		height: 1px;
-		background: var(--md-sys-color-outline-variant);
-	}
-
-	.divider-text {
-		font: var(--md-sys-typescale-label-medium);
-		color: var(--md-sys-color-outline);
-	}
-
-	.phone-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		width: 100%;
-		max-width: 320px;
-		height: 44px;
-		border: 1px solid var(--md-sys-color-outline);
-		border-radius: var(--md-sys-shape-corner-full, 24px);
-		background: transparent;
-		color: var(--md-sys-color-on-surface);
-		font: var(--md-sys-typescale-label-large);
-		cursor: pointer;
-		transition: background 200ms;
-	}
-
-	.phone-btn:hover {
-		background: var(--md-sys-color-surface-container-highest);
 	}
 
 	.phone-input-group {
