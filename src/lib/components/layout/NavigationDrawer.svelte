@@ -3,6 +3,7 @@
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import { getTenantContext } from '$lib/stores/tenant.svelte.js';
 	import { ui } from '$lib/stores/ui.svelte.js';
+	import { memberOrdersStore } from '$lib/stores/memberOrders.svelte.js';
 	import { version } from '$app/environment';
 	import budyLogo from '$lib/assets/budy_logo.svg';
 
@@ -40,6 +41,16 @@
 			}
 			ui.closeNavDrawer();
 			setTimeout(() => ui.openAddressDrawer(), 200);
+			return;
+		}
+		if (label === 'My Orders') {
+			if (!isLoggedIn) {
+				handleSignIn();
+				return;
+			}
+			ui.closeNavDrawer();
+			memberOrdersStore.load();
+			setTimeout(() => ui.openOrdersDrawer(), 200);
 			return;
 		}
 		activeItem = label;

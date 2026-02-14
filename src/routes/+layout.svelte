@@ -5,6 +5,7 @@
 	import { cart } from '$lib/stores/cart.svelte.js';
 	import { orderStore } from '$lib/stores/orders.svelte.js';
 	import { addressStore } from '$lib/stores/addresses.svelte.js';
+	import { memberOrdersStore } from '$lib/stores/memberOrders.svelte.js';
 	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
 	import InstallPrompt from '$lib/components/shared/InstallPrompt.svelte';
 	import { pwa } from '$lib/stores/pwa.svelte.js';
@@ -31,6 +32,7 @@
 			addressStore.load();
 		} else {
 			addressStore.clear();
+			memberOrdersStore.clear();
 		}
 	});
 

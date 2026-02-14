@@ -6,6 +6,7 @@
 	import ProductDetails from '$lib/components/product/ProductDetails.svelte';
 	import Drawer from '$lib/components/shared/Drawer.svelte';
 	import MyAddressesView from '$lib/components/address/MyAddressesView.svelte';
+	import MyOrdersView from '$lib/components/orders/MyOrdersView.svelte';
 	import LoginSheet from '$lib/components/auth/LoginSheet.svelte';
 	import { ui } from '$lib/stores/ui.svelte.js';
 	import { page } from '$app/state';
@@ -51,6 +52,13 @@
 	{#if ui.addressDrawerOpen}
 		<Drawer open={true} side="right" onclose={() => ui.closeAddressDrawer()}>
 			<MyAddressesView />
+		</Drawer>
+	{/if}
+
+	<!-- Orders Drawer -->
+	{#if ui.ordersDrawerOpen}
+		<Drawer open={true} side="right" onclose={() => ui.closeOrdersDrawer()}>
+			<MyOrdersView />
 		</Drawer>
 	{/if}
 

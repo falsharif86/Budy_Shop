@@ -18,6 +18,7 @@ function createUiStore() {
 	let addressFormMode = $state<AddressFormMode>('list');
 	let editingAddressId = $state<string | null>(null);
 	let loginSheetOpen = $state(false);
+	let ordersDrawerOpen = $state(false);
 
 	function openCartDrawer() {
 		cartDrawerOpen = true;
@@ -135,6 +136,14 @@ function createUiStore() {
 		loginSheetOpen = false;
 	}
 
+	function openOrdersDrawer() {
+		ordersDrawerOpen = true;
+	}
+
+	function closeOrdersDrawer() {
+		ordersDrawerOpen = false;
+	}
+
 	return {
 		get cartDrawerOpen() {
 			return cartDrawerOpen;
@@ -178,6 +187,9 @@ function createUiStore() {
 		get loginSheetOpen() {
 			return loginSheetOpen;
 		},
+		get ordersDrawerOpen() {
+			return ordersDrawerOpen;
+		},
 		openCartDrawer,
 		closeCartDrawer,
 		toggleCartDrawer,
@@ -200,7 +212,9 @@ function createUiStore() {
 		showAddressForm,
 		showAddressList,
 		openLoginSheet,
-		closeLoginSheet
+		closeLoginSheet,
+		openOrdersDrawer,
+		closeOrdersDrawer
 	};
 }
 
