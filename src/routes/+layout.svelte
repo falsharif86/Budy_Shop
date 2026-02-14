@@ -82,6 +82,21 @@
 		}
 	});
 
+	// Listen for push messages forwarded by the service worker (foreground)
+	$effect(() => {
+		if (!data.user) return;
+
+		const onSwMessage = (event: MessageEvent) => {
+			if (event.data?.type === 'PUSH_RECEIVED') {
+				handleForegroundMessage(event.data.payload);
+			}
+		};
+		navigator.serviceWorker?.addEventListener('message', onSwMessage);
+		return () => {
+			navigator.serviceWorker?.removeEventListener('message', onSwMessage);
+		};
+	});
+
 	$effect(() => {
 		const onPrompt = (e: Event) => pwa.capturePrompt(e as BeforeInstallPromptEvent);
 		const onInstalled = () => pwa.markInstalled();

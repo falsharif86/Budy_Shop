@@ -29,6 +29,10 @@ export function extractSessionFromToken(
 	const refreshToken = tokenData.refresh_token;
 	const expiresIn = tokenData.expires_in ?? 3600;
 
+	if (!refreshToken) {
+		console.warn('Token response missing refresh_token — session will not survive server restarts');
+	}
+
 	const claims = parseJwtPayload(accessToken);
 	if (!claims) return null;
 

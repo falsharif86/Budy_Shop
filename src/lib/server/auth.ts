@@ -1,5 +1,6 @@
 import type { Cookies } from '@sveltejs/kit';
-
+import { env } from '$env/dynamic/private';
+import { seal, unseal } from './crypto.js';
 
 export interface SessionData {
 	accessToken: string;
@@ -14,44 +15,93 @@ export interface SessionData {
 	expiresAt: number; // Unix timestamp
 }
 
+/** Payload stored in the encrypted cookie (profile + refresh token, no access token). */
+interface CookiePayload {
+	userId: string;
+	email: string;
+	name: string;
+	picture?: string;
+	phoneNumber?: string;
+	roles: string[];
+	tenantId: string;
+	refreshToken: string;
+}
+
 const COOKIE_NAME = 'budy_shop_session';
 
-// Server-side session store (cookie holds only a UUID session ID)
-const sessions = new Map<string, SessionData>();
+// In-memory access token cache — recoverable via refresh token after restart
+const tokenCache = new Map<string, { accessToken: string; expiresAt: number }>();
+
+const COOKIE_OPTIONS = {
+	path: '/',
+	httpOnly: true,
+	secure: true,
+	sameSite: 'lax' as const,
+	maxAge: 60 * 60 * 24 * 30 // 30 days (matches refresh token lifetime)
+};
+
+let devFallbackWarned = false;
+
+function getSessionSecret(): string {
+	const secret = env.SESSION_SECRET;
+	if (secret) return secret;
+
+	if (!devFallbackWarned) {
+		console.warn('SESSION_SECRET not set — using dev fallback. Set this in production!');
+		devFallbackWarned = true;
+	}
+	return 'budy-dev-session-secret-not-for-production-use!!';
+}
 
 export function setSession(cookies: Cookies, data: SessionData): void {
-	// Clear any previous session for this cookie
-	const oldId = cookies.get(COOKIE_NAME);
-	if (oldId) sessions.delete(oldId);
+	const secret = getSessionSecret();
 
-	const sessionId = crypto.randomUUID();
-	sessions.set(sessionId, data);
-	cookies.set(COOKIE_NAME, sessionId, {
-		path: '/',
-		httpOnly: true,
-		secure: true,
-		sameSite: 'lax',
-		maxAge: 60 * 60 * 24 * 7 // 7 days
+	const payload: CookiePayload = {
+		userId: data.userId,
+		email: data.email,
+		name: data.name,
+		picture: data.picture,
+		phoneNumber: data.phoneNumber,
+		roles: data.roles,
+		tenantId: data.tenantId,
+		refreshToken: data.refreshToken ?? ''
+	};
+
+	cookies.set(COOKIE_NAME, seal(payload, secret), COOKIE_OPTIONS);
+
+	// Cache the access token in memory
+	tokenCache.set(data.userId, {
+		accessToken: data.accessToken,
+		expiresAt: data.expiresAt
 	});
 }
 
 export function getSession(cookies: Cookies): SessionData | null {
-	const sessionId = cookies.get(COOKIE_NAME);
-	if (!sessionId) return null;
+	const sealed = cookies.get(COOKIE_NAME);
+	if (!sealed) return null;
 
-	const data = sessions.get(sessionId);
-	if (!data) return null;
+	const secret = getSessionSecret();
+	const payload = unseal<CookiePayload>(sealed, secret);
+	if (!payload) return null;
 
-	if (data.expiresAt && Date.now() / 1000 > data.expiresAt) {
-		clearSession(cookies);
-		return null;
-	}
-	return data;
+	// Look up cached access token
+	const cached = tokenCache.get(payload.userId);
+	const now = Math.floor(Date.now() / 1000);
+
+	return {
+		...payload,
+		accessToken: cached && cached.expiresAt > now ? cached.accessToken : '',
+		expiresAt: cached?.expiresAt ?? 0
+	};
 }
 
 export function clearSession(cookies: Cookies): void {
-	const sessionId = cookies.get(COOKIE_NAME);
-	if (sessionId) sessions.delete(sessionId);
+	const sealed = cookies.get(COOKIE_NAME);
+	if (sealed) {
+		const secret = getSessionSecret();
+		const payload = unseal<CookiePayload>(sealed, secret);
+		if (payload) tokenCache.delete(payload.userId);
+	}
 	cookies.delete(COOKIE_NAME, { path: '/' });
 }
 
@@ -59,15 +109,39 @@ export function updateSession(
 	cookies: Cookies,
 	updates: Partial<Pick<SessionData, 'name' | 'picture' | 'email'>>
 ): boolean {
-	const sessionId = cookies.get(COOKIE_NAME);
-	if (!sessionId) return false;
+	const sealed = cookies.get(COOKIE_NAME);
+	if (!sealed) return false;
 
-	const data = sessions.get(sessionId);
-	if (!data) return false;
+	const secret = getSessionSecret();
+	const payload = unseal<CookiePayload>(sealed, secret);
+	if (!payload) return false;
 
-	if (updates.name !== undefined) data.name = updates.name;
-	if (updates.picture !== undefined) data.picture = updates.picture;
-	if (updates.email !== undefined) data.email = updates.email;
+	if (updates.name !== undefined) payload.name = updates.name;
+	if (updates.picture !== undefined) payload.picture = updates.picture;
+	if (updates.email !== undefined) payload.email = updates.email;
 
+	cookies.set(COOKIE_NAME, seal(payload, secret), COOKIE_OPTIONS);
 	return true;
+}
+
+/** Cache a new access token after a successful refresh. */
+export function cacheAccessToken(userId: string, accessToken: string, expiresAt: number): void {
+	tokenCache.set(userId, { accessToken, expiresAt });
+}
+
+/** Re-seal the cookie with a rotated refresh token. */
+export function updateRefreshToken(
+	cookies: Cookies,
+	userId: string,
+	refreshToken: string
+): void {
+	const sealed = cookies.get(COOKIE_NAME);
+	if (!sealed) return;
+
+	const secret = getSessionSecret();
+	const payload = unseal<CookiePayload>(sealed, secret);
+	if (!payload || payload.userId !== userId) return;
+
+	payload.refreshToken = refreshToken;
+	cookies.set(COOKIE_NAME, seal(payload, secret), COOKIE_OPTIONS);
 }

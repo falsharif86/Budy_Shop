@@ -156,15 +156,31 @@ sw.addEventListener('push', (event) => {
 		const data = payload.data || {};
 
 		const title = notification.title || data.title || 'Budy';
-		const options: NotificationOptions = {
-			body: notification.body || data.body || '',
-			icon: '/icon-192.png',
-			badge: '/icon-48.png',
-			tag: data.orderId || 'budy-notification',
-			data: data
-		};
+		const body = notification.body || data.body || '';
 
-		event.waitUntil(sw.registration.showNotification(title, options));
+		event.waitUntil(
+			sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+				const focusedClient = clients.find((c) => c.visibilityState === 'visible');
+
+				if (focusedClient) {
+					// App is in foreground — post message to client for in-app handling
+					// (update stores, show toast). Also show a subtle notification.
+					focusedClient.postMessage({
+						type: 'PUSH_RECEIVED',
+						payload: { notification: { title, body }, data }
+					});
+				}
+
+				// Always show system notification (foreground: tag deduplicates, background: primary UX)
+				return sw.registration.showNotification(title, {
+					body,
+					icon: '/icon-192.png',
+					badge: '/icon-48.png',
+					tag: data.orderId || 'budy-notification',
+					data: data
+				});
+			})
+		);
 	} catch (e) {
 		console.error('[sw] push handler error:', e);
 	}
