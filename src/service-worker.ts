@@ -175,7 +175,7 @@ sw.addEventListener('notificationclick', (event) => {
 
 	const data = event.notification.data || {};
 	const orderId = data.orderId;
-	const url = orderId ? `/orders/${orderId}` : '/orders';
+	const url = orderId ? `/?openOrder=${orderId}` : `/?openOrders=true`;
 
 	event.waitUntil(
 		sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

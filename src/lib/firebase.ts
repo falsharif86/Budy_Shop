@@ -2,12 +2,13 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
-	apiKey: 'AIzaSyAuXxMSXmSM2hLU9J0SLpYmsOLjRXEYcAg',
+	apiKey: 'AIzaSyCJk3FdLcdDCKpnnaviRJ1UjS7DeR1DD6Y',
 	authDomain: 'budy-pos.firebaseapp.com',
 	projectId: 'budy-pos',
 	storageBucket: 'budy-pos.firebasestorage.app',
-	messagingSenderId: '876147880116',
-	appId: '1:876147880116:web:b5955e1f25c27589a467e1'
+	messagingSenderId: '412447812426',
+	appId: '1:412447812426:web:f47031060f390571b72fb3',
+	measurementId: 'G-NT37MKMVNH'
 };
 
 let app: FirebaseApp | null = null;

@@ -12,8 +12,10 @@
 	import { pwa } from '$lib/stores/pwa.svelte.js';
 	import { notifications, type FcmPayload } from '$lib/stores/notifications.svelte.js';
 	import { toastStore } from '$lib/stores/toast.svelte.js';
+	import { ui } from '$lib/stores/ui.svelte.js';
 	import ToastContainer from '$lib/components/shared/ToastContainer.svelte';
 	import { fade } from 'svelte/transition';
+	import { page } from '$app/state';
 
 	let { data, children } = $props();
 
@@ -89,6 +91,27 @@
 			window.removeEventListener('beforeinstallprompt', onPrompt);
 			window.removeEventListener('appinstalled', onInstalled);
 		};
+	});
+
+	// Handle notification click deep links: ?openOrders=true or ?openOrder=<id>
+	$effect(() => {
+		const params = page.url.searchParams;
+		const openOrders = params.get('openOrders');
+		const openOrder = params.get('openOrder');
+
+		if ((openOrders === 'true' || openOrder) && data.user) {
+			ui.openOrdersDrawer();
+			if (openOrder) {
+				memberOrdersStore.load().then(() => {
+					memberOrdersStore.selectOrder(openOrder);
+				});
+			}
+			// Clean up the URL query params
+			const url = new URL(window.location.href);
+			url.searchParams.delete('openOrders');
+			url.searchParams.delete('openOrder');
+			history.replaceState({}, '', url.pathname);
+		}
 	});
 
 	let showSplash = $state(true);
