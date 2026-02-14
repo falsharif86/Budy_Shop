@@ -8,7 +8,7 @@
 	import { getCartItemPrice } from '$lib/types/cart.js';
 	import type { OnlineOrderDetail } from '$lib/types/order.js';
 	import type { MemberAddress } from '$lib/types/address.js';
-	import { IconChevronLeft, IconClose, IconStore, IconDelivery, IconCheck, IconPlus } from '$lib/components/icons/index.js';
+	import { IconChevronLeft, IconClose, IconStore, IconDelivery, IconCheck, IconPlus, IconCash, IconQrCode, IconCreditCard } from '$lib/components/icons/index.js';
 	import AddressCard from '$lib/components/address/AddressCard.svelte';
 
 	const user = $derived(page.data.user);
@@ -38,6 +38,8 @@
 		}
 	});
 
+	const paymentTypeMap = { cash: 0, card: 1, qr: 2 } as const;
+
 	const canPlaceOrder = $derived(
 		!submitting &&
 		(isPickup || (isDelivery && !!selectedAddress))
@@ -58,6 +60,7 @@
 					unitPrice: getCartItemPrice(item)
 				})),
 				fulfillmentType: isDelivery ? 1 : 0,
+				paymentType: paymentTypeMap[ui.selectedPaymentMethod],
 				customerName: null,
 				customerPhone: null,
 				customerNotes: customerNotes.trim() || null
@@ -243,6 +246,58 @@
 				</div>
 			{/if}
 		</div>
+
+		<!-- Payment method (visible when delivery option selected) -->
+		{#if isPickup || isDelivery}
+			<div class="checkout-section payment-section">
+				<h3 class="checkout-section__title">
+					<svg class="checkout-section__title-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+						<path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+					</svg>
+					Payment Method
+				</h3>
+				<div class="payment-list">
+					<!-- Cash on Delivery -->
+					<button
+						class="payment-option"
+						class:payment-option--selected={ui.selectedPaymentMethod === 'cash'}
+						onclick={() => ui.setPaymentMethod('cash')}
+					>
+						<IconCash class="payment-option__icon" />
+						<span class="payment-option__label">Cash on Delivery</span>
+						{#if ui.selectedPaymentMethod === 'cash'}
+							<div class="payment-option__check">
+								<IconCheck class="payment-option__check-icon" />
+							</div>
+						{/if}
+					</button>
+
+					<!-- QR Code Payment -->
+					<button
+						class="payment-option"
+						class:payment-option--selected={ui.selectedPaymentMethod === 'qr'}
+						onclick={() => ui.setPaymentMethod('qr')}
+					>
+						<IconQrCode class="payment-option__icon" />
+						<span class="payment-option__label">QR Code Payment</span>
+						{#if ui.selectedPaymentMethod === 'qr'}
+							<div class="payment-option__check">
+								<IconCheck class="payment-option__check-icon" />
+							</div>
+						{/if}
+					</button>
+
+					<!-- Pay by Card (disabled) -->
+					<div class="payment-option payment-option--disabled">
+						<IconCreditCard class="payment-option__icon" />
+						<div class="payment-option__label-group">
+							<span class="payment-option__label">Pay by Card</span>
+							<span class="payment-option__badge">Coming soon</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<!-- Order notes (visible when option selected) -->
 		{#if isPickup || isDelivery}
@@ -535,6 +590,109 @@
 		width: 14px;
 		height: 14px;
 		color: var(--md-sys-color-on-primary);
+	}
+
+	/* --- Payment method --- */
+	.payment-section {
+		animation: slide-in 200ms ease-out;
+	}
+
+	.payment-list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.payment-option {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		padding: 14px 16px;
+		border-radius: 12px;
+		background: var(--md-sys-color-surface-container);
+		border: 1.5px solid var(--md-sys-color-outline-variant);
+		cursor: pointer;
+		transition: border-color 200ms ease, background-color 150ms ease;
+	}
+
+	.payment-option:hover:not(.payment-option--disabled) {
+		border-color: var(--md-sys-color-outline);
+	}
+
+	.payment-option--selected {
+		border: 2px solid var(--md-sys-color-primary);
+		background: color-mix(in srgb, var(--md-sys-color-primary-container) 30%, transparent);
+	}
+
+	.payment-option--selected:hover {
+		border-color: var(--md-sys-color-primary);
+	}
+
+	:global(.payment-option__icon) {
+		width: 24px;
+		height: 24px;
+		flex-shrink: 0;
+		color: var(--md-sys-color-on-surface-variant);
+	}
+
+	.payment-option--selected :global(.payment-option__icon) {
+		color: var(--md-sys-color-primary);
+	}
+
+	.payment-option--disabled :global(.payment-option__icon) {
+		color: var(--md-sys-color-outline);
+	}
+
+	.payment-option__label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--md-sys-color-on-surface);
+	}
+
+	.payment-option--selected .payment-option__label {
+		color: var(--md-sys-color-primary);
+		font-weight: 600;
+	}
+
+	.payment-option--disabled .payment-option__label {
+		color: var(--md-sys-color-outline);
+	}
+
+	.payment-option__label-group {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.payment-option__badge {
+		font-size: 0.6875rem;
+		font-weight: 500;
+		color: var(--md-sys-color-outline);
+		font-style: italic;
+	}
+
+	.payment-option__check {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border-radius: 9999px;
+		background: var(--md-sys-color-primary);
+		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	:global(.payment-option__check-icon) {
+		width: 14px;
+		height: 14px;
+		color: var(--md-sys-color-on-primary);
+	}
+
+	.payment-option--disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	/* --- Contact fields --- */

@@ -2,6 +2,7 @@ import type { Product } from '$lib/types/product.js';
 
 export type CheckoutStep = 'cart' | 'checkout' | 'processing' | 'success';
 export type DeliveryOption = 'pickup' | 'delivery';
+export type PaymentMethod = 'cash' | 'qr' | 'card';
 export type AddressFormMode = 'list' | 'create' | 'edit';
 
 function createUiStore() {
@@ -19,6 +20,7 @@ function createUiStore() {
 	let editingAddressId = $state<string | null>(null);
 	let loginSheetOpen = $state(false);
 	let ordersDrawerOpen = $state(false);
+	let selectedPaymentMethod = $state<PaymentMethod>('cash');
 
 	function openCartDrawer() {
 		cartDrawerOpen = true;
@@ -31,6 +33,7 @@ function createUiStore() {
 			if (!cartDrawerOpen) {
 				checkoutStep = 'cart';
 				selectedDeliveryOption = null;
+				selectedPaymentMethod = 'cash';
 			}
 		}, 350);
 	}
@@ -83,10 +86,16 @@ function createUiStore() {
 	function backToCart() {
 		checkoutStep = 'cart';
 		selectedDeliveryOption = null;
+		selectedPaymentMethod = 'cash';
 	}
 
 	function setDeliveryOption(option: DeliveryOption) {
 		selectedDeliveryOption = option;
+	}
+
+	function setPaymentMethod(method: PaymentMethod) {
+		if (method === 'card') return;
+		selectedPaymentMethod = method;
 	}
 
 	function startProcessing() {
@@ -100,6 +109,7 @@ function createUiStore() {
 	function resetCheckout() {
 		checkoutStep = 'cart';
 		selectedDeliveryOption = null;
+		selectedPaymentMethod = 'cash';
 	}
 
 	function openAddressDrawer() {
@@ -187,6 +197,9 @@ function createUiStore() {
 		get loginSheetOpen() {
 			return loginSheetOpen;
 		},
+		get selectedPaymentMethod() {
+			return selectedPaymentMethod;
+		},
 		get ordersDrawerOpen() {
 			return ordersDrawerOpen;
 		},
@@ -204,6 +217,7 @@ function createUiStore() {
 		startCheckout,
 		backToCart,
 		setDeliveryOption,
+		setPaymentMethod,
 		startProcessing,
 		showSuccess,
 		resetCheckout,

@@ -13,3 +13,6 @@ export { default as IconCheck } from './IconCheck.svelte';
 export { default as IconMapPin } from './IconMapPin.svelte';
 export { default as IconBackspace } from './IconBackspace.svelte';
 export { default as IconSend } from './IconSend.svelte';
+export { default as IconCash } from './IconCash.svelte';
+export { default as IconQrCode } from './IconQrCode.svelte';
+export { default as IconCreditCard } from './IconCreditCard.svelte';
