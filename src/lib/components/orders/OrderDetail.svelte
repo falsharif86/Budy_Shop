@@ -3,6 +3,7 @@
 	import { IconChevronLeft, IconStore, IconDelivery } from '$lib/components/icons/index.js';
 	import { formatPrice } from '$lib/utils/currency.js';
 	import OrderStatusBadge from './OrderStatusBadge.svelte';
+	import DeliveryTrackingMap from './DeliveryTrackingMap.svelte';
 	import ProductImage from '$lib/components/shared/ProductImage.svelte';
 
 	interface Props {
@@ -17,6 +18,12 @@
 	const hasDeliveryAddress = $derived(!!order.deliveryStreetAddress);
 	const showDeliveryStepper = $derived(
 		isDelivery && order.deliveryStatusValue !== undefined && order.statusValue === 0
+	);
+	const showTrackingMap = $derived(
+		isDelivery &&
+		order.deliveryStatusValue === 1 &&
+		order.deliveryLatitude != null &&
+		order.deliveryLongitude != null
 	);
 
 	// Delivery status steps: 0=Received, 1=Delivering, 2=Delivered
@@ -55,8 +62,20 @@
 		/>
 	</div>
 
-	<!-- Scrollable content -->
-	<div class="order-detail__content">
+	<!-- Content: either wrapped in tracking map or plain scrollable -->
+	{#if showTrackingMap}
+		<DeliveryTrackingMap deliveryLat={order.deliveryLatitude!} deliveryLng={order.deliveryLongitude!}>
+			<div class="order-detail__content">
+				{@render orderContent()}
+			</div>
+		</DeliveryTrackingMap>
+	{:else}
+		<div class="order-detail__content">
+			{@render orderContent()}
+		</div>
+	{/if}
+
+	{#snippet orderContent()}
 		<!-- Fulfillment info -->
 		<div class="order-detail__fulfillment">
 			<span class="order-detail__fulfillment-label">
@@ -178,7 +197,7 @@
 				<span>{formatPrice(order.total)}</span>
 			</div>
 		</div>
-	</div>
+	{/snippet}
 </div>
 
 <style>

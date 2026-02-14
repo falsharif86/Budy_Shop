@@ -119,11 +119,29 @@ export async function fetchPlaceById(placeId: string): Promise<PlaceResult | nul
 export const DEFAULT_CENTER = { lat: 13.7563, lng: 100.5018 }; // Bangkok
 export const DEFAULT_ZOOM = 15;
 
+export const DARK_MAP_STYLES = [
+	{ elementType: 'geometry', stylers: [{ color: '#212121' }] },
+	{ elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+	{ elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+	{ elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
+	{ featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#757575' }] },
+	{ featureType: 'poi', stylers: [{ visibility: 'off' }] },
+	{ featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#2c2c2c' }] },
+	{ featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] },
+	{ featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#373737' }] },
+	{ featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3c3c3c' }] },
+	{ featureType: 'road.highway.controlled_access', elementType: 'geometry', stylers: [{ color: '#4e4e4e' }] },
+	{ featureType: 'transit', stylers: [{ visibility: 'off' }] },
+	{ featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+	{ featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d3d3d' }] }
+];
+
 export function initMap(
 	container: HTMLElement,
 	lat: number,
 	lng: number,
-	zoom: number
+	zoom: number,
+	styles?: any[]
 ): any {
 	const google = (window as any).google;
 	return new google.maps.Map(container, {
@@ -133,11 +151,81 @@ export function initMap(
 		zoomControl: true,
 		gestureHandling: 'greedy',
 		clickableIcons: false,
-		styles: [
+		styles: styles ?? [
 			{ featureType: 'poi', stylers: [{ visibility: 'off' }] },
 			{ featureType: 'transit', stylers: [{ visibility: 'off' }] }
 		]
 	});
+}
+
+export function addMarker(
+	map: any,
+	lat: number,
+	lng: number,
+	options?: { label?: string; icon?: any }
+): any {
+	const google = (window as any).google;
+	return new google.maps.Marker({
+		position: { lat, lng },
+		map,
+		draggable: false,
+		...(options?.label ? { label: options.label } : {}),
+		...(options?.icon ? { icon: options.icon } : {})
+	});
+}
+
+export function drawRoute(
+	map: any,
+	origin: { lat: number; lng: number },
+	destination: { lat: number; lng: number },
+	options?: { color?: string; weight?: number }
+): any {
+	const google = (window as any).google;
+	return new google.maps.Polyline({
+		path: [origin, destination],
+		geodesic: true,
+		strokeColor: options?.color ?? '#00C896',
+		strokeOpacity: 0.9,
+		strokeWeight: options?.weight ?? 4,
+		map
+	});
+}
+
+export function fitBounds(
+	map: any,
+	points: { lat: number; lng: number }[],
+	padding?: number
+): void {
+	const google = (window as any).google;
+	const bounds = new google.maps.LatLngBounds();
+	for (const p of points) {
+		bounds.extend(p);
+	}
+	map.fitBounds(bounds, padding ?? 60);
+}
+
+export function haversineDistance(
+	lat1: number,
+	lng1: number,
+	lat2: number,
+	lng2: number
+): number {
+	const R = 6371; // Earth radius in km
+	const dLat = ((lat2 - lat1) * Math.PI) / 180;
+	const dLng = ((lng2 - lng1) * Math.PI) / 180;
+	const a =
+		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos((lat1 * Math.PI) / 180) *
+			Math.cos((lat2 * Math.PI) / 180) *
+			Math.sin(dLng / 2) *
+			Math.sin(dLng / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	return R * c;
+}
+
+export function estimateDeliveryMinutes(distanceKm: number): number {
+	const avgSpeedKmh = 25;
+	return Math.max(1, Math.round((distanceKm / avgSpeedKmh) * 60));
 }
 
 export function addDraggableMarker(

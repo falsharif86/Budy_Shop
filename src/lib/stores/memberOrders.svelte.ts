@@ -96,10 +96,19 @@ function createMemberOrdersStore() {
 
 		// Patch the selected detail if viewing this order
 		if (selectedOrder && selectedOrder.id === orderId) {
+			// Optimistic patch for instant UI feedback (status badge updates immediately)
 			const patched = { ...selectedOrder, statusValue, statusName };
 			if (deliveryStatusValue !== undefined) patched.deliveryStatusValue = deliveryStatusValue;
 			if (deliveryStatusName !== undefined) patched.deliveryStatusName = deliveryStatusName;
 			selectedOrder = patched;
+
+			// Re-fetch full detail in background to get complete data (e.g. delivery coordinates)
+			fetch(`/api/orders/member/${orderId}`)
+				.then((res) => (res.ok ? res.json() : null))
+				.then((detail) => {
+					if (detail && selectedOrder?.id === orderId) selectedOrder = detail;
+				})
+				.catch(() => {});
 		}
 	}
 

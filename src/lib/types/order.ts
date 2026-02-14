@@ -109,4 +109,6 @@ export interface MemberOrderDetail {
 	deliveryCity: string | null;
 	deliveryPostalCode: string | null;
 	deliveryCountry: string | null;
+	deliveryLatitude?: number | null;
+	deliveryLongitude?: number | null;
 }
