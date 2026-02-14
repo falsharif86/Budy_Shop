@@ -2,11 +2,20 @@
 	interface Props {
 		statusValue: number;
 		statusName: string;
+		fulfillmentTypeValue?: number;
+		deliveryStatusValue?: number;
+		deliveryStatusName?: string;
 	}
 
-	let { statusValue, statusName }: Props = $props();
+	let {
+		statusValue,
+		statusName,
+		fulfillmentTypeValue,
+		deliveryStatusValue,
+		deliveryStatusName
+	}: Props = $props();
 
-	const colorMap: Record<number, { bg: string; text: string }> = {
+	const orderColorMap: Record<number, { bg: string; text: string }> = {
 		0: {
 			bg: 'color-mix(in srgb, #FFB300 18%, transparent)',
 			text: '#FFB300'
@@ -25,14 +34,45 @@
 		}
 	};
 
-	const colors = $derived(colorMap[statusValue] ?? colorMap[3]);
+	// Delivery status colors: 0=Received (amber), 1=Delivering (teal), 2=Delivered (green)
+	const deliveryColorMap: Record<number, { bg: string; text: string }> = {
+		0: {
+			bg: 'color-mix(in srgb, #FFB300 18%, transparent)',
+			text: '#FFB300'
+		},
+		1: {
+			bg: 'color-mix(in srgb, #009688 18%, transparent)',
+			text: '#009688'
+		},
+		2: {
+			bg: 'color-mix(in srgb, #4CAF50 18%, transparent)',
+			text: '#4CAF50'
+		}
+	};
+
+	const isDelivery = $derived(fulfillmentTypeValue === 1);
+	const hasDeliveryStatus = $derived(
+		isDelivery && deliveryStatusValue !== undefined && deliveryStatusName !== undefined
+	);
+
+	// Use delivery status label when active order is a delivery with delivery status
+	const displayName = $derived(
+		statusValue === 0 && hasDeliveryStatus ? deliveryStatusName! : statusName
+	);
+
+	const colors = $derived.by(() => {
+		if (statusValue === 0 && hasDeliveryStatus) {
+			return deliveryColorMap[deliveryStatusValue!] ?? orderColorMap[0];
+		}
+		return orderColorMap[statusValue] ?? orderColorMap[3];
+	});
 </script>
 
 <span
 	class="order-status-badge"
 	style="background: {colors.bg}; color: {colors.text};"
 >
-	{statusName}
+	{displayName}
 </span>
 
 <style>

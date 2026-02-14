@@ -78,6 +78,31 @@ function createMemberOrdersStore() {
 		selectedOrder = null;
 	}
 
+	function updateOrderStatus(
+		orderId: string,
+		statusValue: number,
+		statusName: string,
+		deliveryStatusValue?: number,
+		deliveryStatusName?: string
+	) {
+		// Patch the order in the list
+		orders = orders.map((o) => {
+			if (o.id !== orderId) return o;
+			const patched = { ...o, statusValue, statusName };
+			if (deliveryStatusValue !== undefined) patched.deliveryStatusValue = deliveryStatusValue;
+			if (deliveryStatusName !== undefined) patched.deliveryStatusName = deliveryStatusName;
+			return patched;
+		});
+
+		// Patch the selected detail if viewing this order
+		if (selectedOrder && selectedOrder.id === orderId) {
+			const patched = { ...selectedOrder, statusValue, statusName };
+			if (deliveryStatusValue !== undefined) patched.deliveryStatusValue = deliveryStatusValue;
+			if (deliveryStatusName !== undefined) patched.deliveryStatusName = deliveryStatusName;
+			selectedOrder = patched;
+		}
+	}
+
 	function clear() {
 		orders = [];
 		totalCount = 0;
@@ -119,6 +144,7 @@ function createMemberOrdersStore() {
 		load,
 		loadMore,
 		selectOrder,
+		updateOrderStatus,
 		backToList,
 		clear
 	};

@@ -10,7 +10,9 @@
 	import InstallPrompt from '$lib/components/shared/InstallPrompt.svelte';
 	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 	import { pwa } from '$lib/stores/pwa.svelte.js';
-	import { notifications } from '$lib/stores/notifications.svelte.js';
+	import { notifications, type FcmPayload } from '$lib/stores/notifications.svelte.js';
+	import { toastStore } from '$lib/stores/toast.svelte.js';
+	import ToastContainer from '$lib/components/shared/ToastContainer.svelte';
 	import { fade } from 'svelte/transition';
 
 	let { data, children } = $props();
@@ -43,6 +45,38 @@
 	$effect(() => {
 		if (data.tenant && data.user) {
 			notifications.init();
+		}
+	});
+
+	function handleForegroundMessage(payload: FcmPayload) {
+		const type = payload.data?.type;
+		const orderId = payload.data?.orderId;
+
+		if (type === 'order_status_changed' && orderId) {
+			const statusValue = parseInt(payload.data?.status ?? '', 10);
+			const statusName = payload.data?.statusName ?? '';
+			const deliveryStatus = payload.data?.deliveryStatus
+				? parseInt(payload.data.deliveryStatus, 10)
+				: undefined;
+			const deliveryStatusName = payload.data?.deliveryStatusName;
+
+			memberOrdersStore.updateOrderStatus(
+				orderId,
+				statusValue,
+				statusName,
+				deliveryStatus,
+				deliveryStatusName
+			);
+		}
+
+		const title = payload.notification?.title ?? 'Order Update';
+		const body = payload.notification?.body;
+		toastStore.show(title, body);
+	}
+
+	$effect(() => {
+		if (data.tenant && data.user && notifications.isSubscribed) {
+			notifications.listenForeground(handleForegroundMessage);
 		}
 	});
 
@@ -93,6 +127,7 @@
 		{@render children()}
 	</ShopShell>
 	<InstallPrompt />
+	<ToastContainer />
 	{#if data.user}
 		<NotificationPrompt memberId={data.user.id} />
 	{/if}

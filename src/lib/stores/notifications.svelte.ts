@@ -8,8 +8,7 @@ let subscribing = $state(false);
 const DISMISSED_KEY = 'budy_notif_dismissed';
 const TOKEN_KEY = 'budy_notif_token';
 
-/** VAPID key for FCM web push - configure in Firebase Console */
-const VAPID_KEY = 'PLACEHOLDER_VAPID_KEY'; // replace after Firebase Console setup
+const VAPID_KEY = 'BL0JVVgC7FZBFGPDMCtV5qgzkT_omWka0DSV-SxUwavtdUhrbGNo1BQMdvAEyzz9UjH8bg6AouxxOh33aAdnBNw';
 
 function createNotificationStore() {
 	return {
@@ -169,6 +168,8 @@ export interface FcmPayload {
 		orderNo?: string;
 		status?: string;
 		statusName?: string;
+		deliveryStatus?: string;
+		deliveryStatusName?: string;
 		tenantId?: string;
 		[key: string]: string | undefined;
 	};

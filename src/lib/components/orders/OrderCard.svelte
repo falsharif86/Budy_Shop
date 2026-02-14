@@ -46,7 +46,13 @@
 	<div class="order-card__top">
 		<div class="order-card__title-row">
 			<span class="order-card__order-no">#{order.orderNo ?? '---'}</span>
-			<OrderStatusBadge statusValue={order.statusValue} statusName={order.statusName} />
+			<OrderStatusBadge
+				statusValue={order.statusValue}
+				statusName={order.statusName}
+				fulfillmentTypeValue={order.fulfillmentTypeValue}
+				deliveryStatusValue={order.deliveryStatusValue}
+				deliveryStatusName={order.deliveryStatusName}
+			/>
 		</div>
 		<span class="order-card__time">{timeAgo}</span>
 	</div>

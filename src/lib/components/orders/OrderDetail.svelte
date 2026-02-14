@@ -13,7 +13,18 @@
 	let { order, onback }: Props = $props();
 
 	const isPickup = $derived(order.fulfillmentTypeValue === 0);
+	const isDelivery = $derived(order.fulfillmentTypeValue === 1);
 	const hasDeliveryAddress = $derived(!!order.deliveryStreetAddress);
+	const showDeliveryStepper = $derived(
+		isDelivery && order.deliveryStatusValue !== undefined && order.statusValue === 0
+	);
+
+	// Delivery status steps: 0=Received, 1=Delivering, 2=Delivered
+	const deliverySteps = [
+		{ value: 0, label: 'Received' },
+		{ value: 1, label: 'Delivering' },
+		{ value: 2, label: 'Delivered' }
+	];
 	const formattedDate = $derived(
 		new Date(order.creationTime).toLocaleDateString('en-US', {
 			month: 'short',
@@ -35,7 +46,13 @@
 			<span class="order-detail__order-no">Order #{order.orderNo ?? '---'}</span>
 			<span class="order-detail__date">{formattedDate}</span>
 		</div>
-		<OrderStatusBadge statusValue={order.statusValue} statusName={order.statusName} />
+		<OrderStatusBadge
+			statusValue={order.statusValue}
+			statusName={order.statusName}
+			fulfillmentTypeValue={order.fulfillmentTypeValue}
+			deliveryStatusValue={order.deliveryStatusValue}
+			deliveryStatusName={order.deliveryStatusName}
+		/>
 	</div>
 
 	<!-- Scrollable content -->
@@ -52,6 +69,33 @@
 				{/if}
 			</span>
 		</div>
+
+		<!-- Delivery status stepper -->
+		{#if showDeliveryStepper}
+			<div class="delivery-stepper">
+				<span class="order-detail__section-title">Delivery Status</span>
+				<div class="delivery-stepper__track">
+					{#each deliverySteps as step, i (step.value)}
+						{@const currentStatus = order.deliveryStatusValue ?? 0}
+						{@const isCompleted = step.value < currentStatus}
+						{@const isCurrent = step.value === currentStatus}
+						<div class="delivery-stepper__step" class:delivery-stepper__step--completed={isCompleted} class:delivery-stepper__step--current={isCurrent}>
+							<div class="delivery-stepper__dot">
+								{#if isCompleted}
+									<svg class="delivery-stepper__check" viewBox="0 0 16 16" fill="none">
+										<path d="M3.5 8.5L6.5 11.5L12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								{/if}
+							</div>
+							<span class="delivery-stepper__label">{step.label}</span>
+						</div>
+						{#if i < deliverySteps.length - 1}
+							<div class="delivery-stepper__connector" class:delivery-stepper__connector--completed={step.value < currentStatus}></div>
+						{/if}
+					{/each}
+				</div>
+			</div>
+		{/if}
 
 		<!-- Delivery address -->
 		{#if !isPickup && hasDeliveryAddress}
@@ -363,5 +407,85 @@
 		color: var(--md-sys-color-on-surface);
 		padding-top: 6px;
 		border-top: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 30%, transparent);
+	}
+
+	/* Delivery Stepper */
+	.delivery-stepper {
+		padding: 12px 14px;
+		border-radius: 10px;
+		background: var(--md-sys-color-surface-container);
+	}
+
+	.delivery-stepper__track {
+		display: flex;
+		align-items: flex-start;
+		gap: 0;
+	}
+
+	.delivery-stepper__step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		flex-shrink: 0;
+	}
+
+	.delivery-stepper__dot {
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		border: 2px solid var(--md-sys-color-outline-variant);
+		background: var(--md-sys-color-surface);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+	}
+
+	.delivery-stepper__step--completed .delivery-stepper__dot {
+		border-color: #009688;
+		background: #009688;
+	}
+
+	.delivery-stepper__step--current .delivery-stepper__dot {
+		border-color: #009688;
+		background: color-mix(in srgb, #009688 18%, transparent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, #009688 12%, transparent);
+	}
+
+	.delivery-stepper__check {
+		width: 14px;
+		height: 14px;
+		color: white;
+	}
+
+	.delivery-stepper__label {
+		font-size: 0.6875rem;
+		font-weight: 500;
+		color: var(--md-sys-color-outline);
+		text-align: center;
+		max-width: 60px;
+	}
+
+	.delivery-stepper__step--current .delivery-stepper__label {
+		color: #009688;
+		font-weight: 600;
+	}
+
+	.delivery-stepper__step--completed .delivery-stepper__label {
+		color: var(--md-sys-color-on-surface-variant);
+	}
+
+	.delivery-stepper__connector {
+		flex: 1;
+		height: 2px;
+		background: var(--md-sys-color-outline-variant);
+		margin-top: 12px;
+		min-width: 20px;
+		transition: background 0.2s ease;
+	}
+
+	.delivery-stepper__connector--completed {
+		background: #009688;
 	}
 </style>

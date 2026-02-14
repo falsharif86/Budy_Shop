@@ -2,12 +2,12 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
-	apiKey: 'AIzaSyBxxxxxx', // placeholder - configure in Firebase Console
+	apiKey: 'AIzaSyAuXxMSXmSM2hLU9J0SLpYmsOLjRXEYcAg',
 	authDomain: 'budy-pos.firebaseapp.com',
 	projectId: 'budy-pos',
 	storageBucket: 'budy-pos.firebasestorage.app',
 	messagingSenderId: '876147880116',
-	appId: '1:876147880116:web:placeholder' // placeholder - configure in Firebase Console
+	appId: '1:876147880116:web:b5955e1f25c27589a467e1'
 };
 
 let app: FirebaseApp | null = null;

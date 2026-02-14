@@ -61,6 +61,8 @@ export interface MemberOrder {
 	statusValue: number;
 	statusName: string;
 	fulfillmentTypeValue: number;
+	deliveryStatusValue?: number;
+	deliveryStatusName?: string;
 	itemCount: number;
 	creationTime: string;
 }
@@ -92,6 +94,8 @@ export interface MemberOrderDetail {
 	statusValue: number;
 	statusName: string;
 	fulfillmentTypeValue: number;
+	deliveryStatusValue?: number;
+	deliveryStatusName?: string;
 	customerName: string | null;
 	customerPhone: string | null;
 	customerNotes: string | null;
