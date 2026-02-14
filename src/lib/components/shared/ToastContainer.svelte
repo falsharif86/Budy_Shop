@@ -7,13 +7,17 @@
 {#if toastStore.toasts.length > 0}
 	<div class="toast-container" role="status" aria-live="polite">
 		{#each toastStore.toasts as toast (toast.id)}
-			<button
+			<!-- svelte-ignore a11y_no_static_element_interactions a11y_no_noninteractive_tabindex -->
+			<div
 				class="toast"
 				class:toast--clickable={!!toast.onclick}
+				role={toast.onclick ? 'button' : undefined}
+				tabindex={toast.onclick ? 0 : undefined}
 				onclick={() => {
 					if (toast.onclick) toast.onclick();
 					toastStore.dismiss(toast.id);
 				}}
+				onkeydown={(e: KeyboardEvent) => { if (e.key === 'Enter' && toast.onclick) { toast.onclick(); toastStore.dismiss(toast.id); } }}
 				in:fly={{ y: -40, duration: 250 }}
 				out:fade={{ duration: 150 }}
 			>
@@ -30,7 +34,7 @@
 				>
 					<IconClose class="toast__close-icon" />
 				</button>
-			</button>
+			</div>
 		{/each}
 	</div>
 {/if}
@@ -62,8 +66,9 @@
 		pointer-events: auto;
 		text-align: left;
 		width: 100%;
-		border: none;
 		cursor: default;
+		font-family: inherit;
+		font-size: inherit;
 	}
 
 	.toast--clickable {
