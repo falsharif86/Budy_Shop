@@ -8,7 +8,9 @@
 	import { memberOrdersStore } from '$lib/stores/memberOrders.svelte.js';
 	import BudyLogoSplash from '$lib/components/shared/BudyLogoSplash.svelte';
 	import InstallPrompt from '$lib/components/shared/InstallPrompt.svelte';
+	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 	import { pwa } from '$lib/stores/pwa.svelte.js';
+	import { notifications } from '$lib/stores/notifications.svelte.js';
 	import { fade } from 'svelte/transition';
 
 	let { data, children } = $props();
@@ -37,6 +39,12 @@
 	});
 
 	const tenant = $derived(data.tenant);
+
+	$effect(() => {
+		if (data.tenant && data.user) {
+			notifications.init();
+		}
+	});
 
 	$effect(() => {
 		const onPrompt = (e: Event) => pwa.capturePrompt(e as BeforeInstallPromptEvent);
@@ -85,6 +93,9 @@
 		{@render children()}
 	</ShopShell>
 	<InstallPrompt />
+	{#if data.user}
+		<NotificationPrompt memberId={data.user.id} />
+	{/if}
 {:else}
 	<div class="flex min-h-dvh flex-col items-center justify-center gap-4 p-8 text-center">
 		<div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--md-sys-color-surface-container)]">

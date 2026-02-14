@@ -144,3 +144,48 @@ sw.addEventListener('fetch', (event) => {
 		return;
 	}
 });
+
+// ─── Push Notifications ─────────────────────────────────────────────
+
+sw.addEventListener('push', (event) => {
+	if (!event.data) return;
+
+	try {
+		const payload = event.data.json();
+		const notification = payload.notification || {};
+		const data = payload.data || {};
+
+		const title = notification.title || data.title || 'Budy';
+		const options: NotificationOptions = {
+			body: notification.body || data.body || '',
+			icon: '/icon-192.png',
+			badge: '/icon-48.png',
+			tag: data.orderId || 'budy-notification',
+			data: data
+		};
+
+		event.waitUntil(sw.registration.showNotification(title, options));
+	} catch (e) {
+		console.error('[sw] push handler error:', e);
+	}
+});
+
+sw.addEventListener('notificationclick', (event) => {
+	event.notification.close();
+
+	const data = event.notification.data || {};
+	const orderId = data.orderId;
+	const url = orderId ? `/orders/${orderId}` : '/orders';
+
+	event.waitUntil(
+		sw.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+			for (const client of clients) {
+				if (client.url.includes(sw.location.origin) && 'focus' in client) {
+					client.navigate(url);
+					return client.focus();
+				}
+			}
+			return sw.clients.openWindow(url);
+		})
+	);
+});

@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@sveltejs/adapter-node": "^5.2.0",
+		"firebase": "^12.9.0",
 		"flag-icons": "^7.5.0"
 	},
 	"devDependencies": {

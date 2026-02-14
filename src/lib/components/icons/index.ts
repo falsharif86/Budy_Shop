@@ -1,3 +1,4 @@
+export { default as IconBell } from './IconBell.svelte';
 export { default as IconClose } from './IconClose.svelte';
 export { default as IconCart } from './IconCart.svelte';
 export { default as IconMenu } from './IconMenu.svelte';
